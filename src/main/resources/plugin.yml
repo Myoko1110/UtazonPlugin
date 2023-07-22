@@ -3,3 +3,5 @@ version: '${version}'
 main: work.utakatanet.utazonplugin.UtazonPlugin
 api-version: '1.19'
 authors: [Myoko]
+depend:
+  - EconomyUtilsAPI

@@ -1,5 +1,7 @@
 package work.utakatanet.utazonplugin.utils;
 
+import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
+import com.github.kuripasanda.economyutilsapi.api.impl.EconomyUtilsApiImpl;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 
 import java.io.*;
@@ -9,6 +11,7 @@ import java.util.UUID;
 public class SocketServer implements Runnable {
 
     public static UtazonPlugin utazonPlugin = UtazonPlugin.getPlugin();
+    public static EconomyUtilsApi ecoApi = UtazonPlugin.getEcoApi();
 
     private ServerSocket serverSocket;
     private boolean isRunning = false;
@@ -45,6 +48,8 @@ public class SocketServer implements Runnable {
 
     private void handleClient(Socket clientSocket) throws IOException {
 
+        ecoApi = new EconomyUtilsApiImpl();
+
         InputStream inputStream = null;
         OutputStream outputStream = null;
 
@@ -59,10 +64,13 @@ public class SocketServer implements Runnable {
                 String receivedData = new String(buffer, 0, bytesRead);
 
                 try{
-                    UUID uuid = UUID.fromString(receivedData);
-                    utazonPlugin.getLogger().info("プレイヤーの残高がsocketから参照されました。 参照UUID:" + receivedData);
+                    utazonPlugin.getLogger().info("プレイヤーの残高がsocketから参照されました。 参照UUID: " + receivedData);
 
-                    String responseData = receivedData.toUpperCase();
+                    UUID uuid = UUID.fromString(receivedData);
+                    double PlayerBalance = ecoApi.getBalance(uuid);
+                    utazonPlugin.getLogger().info(String.valueOf(PlayerBalance));
+
+                    String responseData = String.valueOf(PlayerBalance);
                     outputStream.write(responseData.getBytes());
                     outputStream.flush();
 

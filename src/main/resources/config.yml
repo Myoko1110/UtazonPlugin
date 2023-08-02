@@ -1,0 +1,10 @@
+database:
+  host: "localhost"
+  port: "3306"
+  args: ""
+  db: "utazon"
+  user: "user"
+  pass: "password"
+
+socket:
+  port: "44444"

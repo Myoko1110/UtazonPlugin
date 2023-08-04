@@ -5,7 +5,6 @@ import com.github.kuripasanda.economyutilsapi.api.impl.EconomyUtilsApiImpl;
 import org.bukkit.plugin.java.JavaPlugin;
 import work.utakatanet.utazonplugin.utils.SocketServer;
 
-import java.util.UUID;
 
 public final class UtazonPlugin extends JavaPlugin {
 
@@ -17,17 +16,13 @@ public final class UtazonPlugin extends JavaPlugin {
     public void onEnable() {
         plugin = this;
 
-        getLogger().info("UtazonPluginが有効になりました。");
+        getLogger().info("UtazonPlugin が有効になりました");
         saveDefaultConfig();
 
         socketServer = new SocketServer();
         socketServer.start();
 
         ecoApi = new EconomyUtilsApiImpl();
-
-        double balance = ecoApi.getBalance(UUID.fromString("305d2e94-608f-4198-8381-5dc7bcf70f27"));
-        getLogger().info(String.valueOf(balance));
-
     }
 
     @Override

@@ -1,8 +1,9 @@
 package work.utakatanet.utazonplugin.utils;
 
+import work.utakatanet.utazonplugin.UtazonPlugin;
 import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
 import com.github.kuripasanda.economyutilsapi.api.impl.EconomyUtilsApiImpl;
-import work.utakatanet.utazonplugin.UtazonPlugin;
+import com.google.gson.Gson;
 
 import java.io.*;
 import java.net.*;
@@ -18,7 +19,7 @@ public class SocketServer implements Runnable {
 
     public void start() {
         new Thread(this).start();
-        utazonPlugin.getLogger().info("socketサーバーを起動しました。");
+        utazonPlugin.getLogger().info("socketサーバーを起動しました");
     }
 
     @Override
@@ -63,19 +64,33 @@ public class SocketServer implements Runnable {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 String receivedData = new String(buffer, 0, bytesRead);
 
+                Gson gson = new Gson();
+
+                String[] receivedJson = gson.fromJson(receivedData, String[].class);
+
+                // UUID取得
+                UUID uuid = null;
                 try{
-                    utazonPlugin.getLogger().info("プレイヤーの残高がsocketから参照されました。 参照UUID: " + receivedData);
+                    uuid = UUID.fromString(receivedJson[1]);
+                } catch (IllegalArgumentException e){
+                    outputStream.write("Invalid UUID".getBytes());
+                    outputStream.flush();
+                }
 
-                    UUID uuid = UUID.fromString(receivedData);
+                if (receivedJson[0].equalsIgnoreCase("getBalance")){
+                    // Balance取得
                     double PlayerBalance = ecoApi.getBalance(uuid);
-                    utazonPlugin.getLogger().info(String.valueOf(PlayerBalance));
 
+                    // Balanceを返す
                     String responseData = String.valueOf(PlayerBalance);
                     outputStream.write(responseData.getBytes());
                     outputStream.flush();
 
-                } catch (IllegalArgumentException e){
-                    outputStream.write("Invalid UUID".getBytes());
+                }else if ((receivedJson[0].equalsIgnoreCase("withdrawPlayer"))){
+                    utazonPlugin.getLogger().info(receivedJson[2]);
+                    ecoApi.withdrawPlayer(uuid, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』で購入", receivedJson[3]);
+
+                    outputStream.write("Success".getBytes());
                     outputStream.flush();
                 }
             }

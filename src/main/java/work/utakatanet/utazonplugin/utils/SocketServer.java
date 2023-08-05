@@ -12,7 +12,7 @@ import java.util.UUID;
 public class SocketServer implements Runnable {
 
     public static UtazonPlugin utazonPlugin = UtazonPlugin.getPlugin();
-    public static EconomyUtilsApi ecoApi = null;
+    public static EconomyUtilsApi ecoApi = UtazonPlugin.ecoApi;
 
     private ServerSocket serverSocket;
     private boolean isRunning = false;
@@ -48,8 +48,6 @@ public class SocketServer implements Runnable {
     }
 
     private void handleClient(Socket clientSocket) throws IOException {
-
-        ecoApi = EconomyUtilsAPI.Companion.getApi();
 
         InputStream inputStream = null;
         OutputStream outputStream = null;

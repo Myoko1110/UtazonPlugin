@@ -1,8 +1,8 @@
 package work.utakatanet.utazonplugin.utils;
 
-import work.utakatanet.utazonplugin.UtazonPlugin;
+import com.github.kuripasanda.economyutilsapi.EconomyUtilsAPI;
 import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
-import com.github.kuripasanda.economyutilsapi.api.impl.EconomyUtilsApiImpl;
+import work.utakatanet.utazonplugin.UtazonPlugin;
 import com.google.gson.Gson;
 
 import java.io.*;
@@ -12,7 +12,7 @@ import java.util.UUID;
 public class SocketServer implements Runnable {
 
     public static UtazonPlugin utazonPlugin = UtazonPlugin.getPlugin();
-    public static EconomyUtilsApi ecoApi = UtazonPlugin.getEcoApi();
+    public static EconomyUtilsApi ecoApi = null;
 
     private ServerSocket serverSocket;
     private boolean isRunning = false;
@@ -49,7 +49,7 @@ public class SocketServer implements Runnable {
 
     private void handleClient(Socket clientSocket) throws IOException {
 
-        ecoApi = new EconomyUtilsApiImpl();
+        ecoApi = EconomyUtilsAPI.Companion.getApi();
 
         InputStream inputStream = null;
         OutputStream outputStream = null;
@@ -87,9 +87,11 @@ public class SocketServer implements Runnable {
                     outputStream.flush();
 
                 }else if ((receivedJson[0].equalsIgnoreCase("withdrawPlayer"))){
-                    utazonPlugin.getLogger().info(receivedJson[2]);
-                    ecoApi.withdrawPlayer(uuid, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』で購入", receivedJson[3]);
-
+                    UUID finalUuid = uuid;
+                    utazonPlugin.getServer().getScheduler().callSyncMethod(utazonPlugin, () -> {
+                        ecoApi.withdrawPlayer(finalUuid, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』で購入", receivedJson[3]);
+                        return null;
+                    });
                     outputStream.write("Success".getBytes());
                     outputStream.flush();
                 }

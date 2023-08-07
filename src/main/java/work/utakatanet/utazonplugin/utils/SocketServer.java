@@ -92,6 +92,14 @@ public class SocketServer implements Runnable {
                     });
                     outputStream.write("Success".getBytes());
                     outputStream.flush();
+                }else if ((receivedJson[0].equalsIgnoreCase("depositPlayer"))){
+                    UUID finalUuid = uuid;
+                    utazonPlugin.getServer().getScheduler().callSyncMethod(utazonPlugin, () -> {
+                        ecoApi.depositPlayer(finalUuid, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』からの返金", receivedJson[3]);
+                        return null;
+                    });
+                    outputStream.write("Success".getBytes());
+                    outputStream.flush();
                 }
             }
 

@@ -1,7 +1,7 @@
-package work.utakatanet.utazonplugin.utils;
+package work.utakatanet.utazonplugin.util;
 
-import com.github.kuripasanda.economyutilsapi.EconomyUtilsAPI;
 import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
+import org.bukkit.configuration.file.FileConfiguration;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 import com.google.gson.Gson;
 
@@ -11,11 +11,13 @@ import java.util.UUID;
 
 public class SocketServer implements Runnable {
 
-    public static UtazonPlugin utazonPlugin = UtazonPlugin.getPlugin();
-    public static EconomyUtilsApi ecoApi = UtazonPlugin.ecoApi;
+    private static final UtazonPlugin utazonPlugin = UtazonPlugin.plugin;
+    private static final Gson gson = UtazonPlugin.gson;
+    private static final EconomyUtilsApi ecoApi = UtazonPlugin.ecoApi;
 
     private ServerSocket serverSocket;
-    private boolean isRunning = false;
+    public boolean isRunning = false;
+    private int port;
 
     public void start() {
         new Thread(this).start();
@@ -25,7 +27,7 @@ public class SocketServer implements Runnable {
     @Override
     public void run() {
         try {
-            serverSocket = new ServerSocket(GetSocketPort());
+            serverSocket = new ServerSocket(port);
             isRunning = true;
 
             while (isRunning) {
@@ -39,9 +41,11 @@ public class SocketServer implements Runnable {
     }
 
     public void stopServer() {
-        isRunning = false;
         try {
-            serverSocket.close();
+            isRunning = false;
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -61,8 +65,6 @@ public class SocketServer implements Runnable {
 
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 String receivedData = new String(buffer, 0, bytesRead);
-
-                Gson gson = new Gson();
 
                 String[] receivedJson = gson.fromJson(receivedData, String[].class);
 
@@ -118,7 +120,8 @@ public class SocketServer implements Runnable {
         }
     }
 
-    public static int GetSocketPort(){
-        return utazonPlugin.getConfig().getInt("socket.port");
+    public void loadSocketSettings(){
+        FileConfiguration section = utazonPlugin.getConfig();
+        this.port = section.getInt("socket.port");
     }
 }

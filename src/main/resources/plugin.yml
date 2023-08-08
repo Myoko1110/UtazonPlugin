@@ -5,3 +5,25 @@ api-version: '1.19'
 authors: [Myoko]
 depend:
   - EconomyUtilsAPI
+
+commands:
+  utazonplugin:
+    aliases: [utazon]
+    description: utazon.
+    permission-message: "このコマンドを実行する権限がありません"
+
+permissions:
+  utazonplugin.*:
+    description: Allows all utazon commands.
+    default: op
+    children:
+      utazonplugin.socket: true
+      utazonplugin.reload: true
+
+  utazonplugin.socket:
+    description: Allows /utazon socket command.
+    default: op
+
+  utazonplugin.reload:
+    description: Allows /utazon reload command.
+    default: op

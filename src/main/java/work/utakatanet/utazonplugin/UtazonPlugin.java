@@ -37,7 +37,7 @@ public final class UtazonPlugin extends JavaPlugin {
         getLogger().info(order.get(0).get("order_id").toString());
 
         detectOrder scheduler = new detectOrder();
-        scheduler.runTaskTimer(this, 20, 20);
+        scheduler.runTaskTimer(this, 20*60, 20*60);
     }
 
     @Override

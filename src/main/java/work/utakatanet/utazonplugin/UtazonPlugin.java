@@ -3,13 +3,15 @@ package work.utakatanet.utazonplugin;
 import com.github.kuripasanda.economyutilsapi.EconomyUtilsAPI;
 import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
 import com.google.gson.Gson;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import work.utakatanet.utazonplugin.command.onCommand;
+import work.utakatanet.utazonplugin.listener.WaitingStockClose;
+import work.utakatanet.utazonplugin.listener.onCommand;
 import work.utakatanet.utazonplugin.post.detectOrder;
 import work.utakatanet.utazonplugin.util.*;
 
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.List;
 
 
 public final class UtazonPlugin extends JavaPlugin {
@@ -17,7 +19,7 @@ public final class UtazonPlugin extends JavaPlugin {
     public static EconomyUtilsApi ecoApi = null;
     public static final Gson gson = new Gson();
     public static UtazonPlugin plugin;
-    public SocketServer socketServer;
+    public static SocketServer socketServer;
 
     @Override
     public void onEnable() {
@@ -30,14 +32,14 @@ public final class UtazonPlugin extends JavaPlugin {
         socketServer = new SocketServer();
         socketServer.start();
 
-        getCommand("utazonplugin").setExecutor(new onCommand());
+        getCommand("utazon").setExecutor(new onCommand());
+        getServer().getPluginManager().registerEvents(new WaitingStockClose(), this);
 
-        DBHelper dbHelper = new DBHelper();
-        ArrayList<Map<String, Object>> order = dbHelper.GetOrder();
-        getLogger().info(order.get(0).get("order_id").toString());
+        new DatabaseHelper().init();
 
         detectOrder scheduler = new detectOrder();
-        scheduler.runTaskTimer(this, 20*60, 20*60);
+        scheduler.runTaskTimer(this, 0, 20*60);
+
     }
 
     @Override

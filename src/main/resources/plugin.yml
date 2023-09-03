@@ -1,4 +1,4 @@
-name: UtazonPlugin
+name: Utazon
 version: '${version}'
 main: work.utakatanet.utazonplugin.UtazonPlugin
 api-version: '1.19'
@@ -7,23 +7,26 @@ depend:
   - EconomyUtilsAPI
 
 commands:
-  utazonplugin:
-    aliases: [utazon]
-    description: utazon.
+  utazon:
     permission-message: "このコマンドを実行する権限がありません"
 
 permissions:
-  utazonplugin.*:
+  utazon.*:
     description: Allows all utazon commands.
     default: op
     children:
-      utazonplugin.socket: true
-      utazonplugin.reload: true
+      utazon.socket: true
+      utazon.reload: true
+      utazon.stockgui: true
 
-  utazonplugin.socket:
+  utazon.socket:
     description: Allows /utazon socket command.
     default: op
 
-  utazonplugin.reload:
+  utazon.stockgui:
+    description: Allows /utazon stockgui command.
+    default: true
+
+  utazon.reload:
     description: Allows /utazon reload command.
     default: op

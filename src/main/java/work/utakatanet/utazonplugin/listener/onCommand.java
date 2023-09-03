@@ -1,34 +1,43 @@
-package work.utakatanet.utazonplugin.command;
+package work.utakatanet.utazonplugin.listener;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import work.utakatanet.utazonplugin.UtazonPlugin;
-import work.utakatanet.utazonplugin.util.DBHelper;
+import work.utakatanet.utazonplugin.util.DatabaseHelper;
 import work.utakatanet.utazonplugin.util.SocketServer;
+import work.utakatanet.utazonplugin.util.WaitingStockHelper;
 
 import java.util.List;
 
 public class onCommand implements CommandExecutor, TabCompleter {
 
-    private static final UtazonPlugin utazonPlugin = UtazonPlugin.plugin;
-    private static final SocketServer socketServer = utazonPlugin.socketServer;
+    private static final UtazonPlugin plugin = UtazonPlugin.plugin;
+    private static final SocketServer socketServer = UtazonPlugin.socketServer;
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
-        if (command.getName().equalsIgnoreCase("utazonplugin")) {
+        if (command.getName().equalsIgnoreCase("utazon")) {
             if (args.length == 0){
                 sender.sendMessage(ChatColor.RED + "[UtazonPlugin] 引数を入力してください。");
                 return true;
             }
-            if (args[0].equals("socket")){
-                return socket(sender, command, label, args);
-            }else if (args[0].equals("reload")){
-                return reload(sender, command, label, args);
+            switch (args[0]) {
+                case "socket" -> {
+                    return socket(sender, command, label, args);
+                }
+                case "reload" -> {
+                    return reload(sender, command, label, args);
+                }
+                case "stockgui" -> {
+                    return stockGUI(sender, command, label, args);
+                }
             }
         }
         return false;
@@ -52,11 +61,11 @@ public class onCommand implements CommandExecutor, TabCompleter {
     }
 
     public boolean socket(CommandSender sender, Command command, String label, String[] args){
-        if(!sender.hasPermission("utazonplugin.socket")){
+        if (!sender.hasPermission("utazon.socket")){
             sender.sendMessage(ChatColor.RED + command.getPermissionMessage());
             return true;
         }
-        if(args.length != 2){
+        if (args.length != 2){
             sender.sendMessage(ChatColor.RED + "[UtazonPlugin] 引数が不足しています: /utazon socket <mode>");
             return true;
         }
@@ -90,16 +99,34 @@ public class onCommand implements CommandExecutor, TabCompleter {
     }
 
     public boolean reload(CommandSender sender, Command command, String label, String[] args){
-        if(!sender.hasPermission("utazonplugin.reload")){
+        if (!sender.hasPermission("utazon.reload")){
             sender.sendMessage(ChatColor.RED + command.getPermissionMessage());
             return true;
         }
 
-        utazonPlugin.reloadConfig();
-        new DBHelper().loadDBSettings();
-        new DBHelper().createTable();
-        new SocketServer().loadSocketSettings();
+        plugin.reloadConfig();
+        new DatabaseHelper().loadSettings();
+        new DatabaseHelper().createTable();
+        new SocketServer().loadSettings();
+
+        stopSocket();
+        startSocket();
+
         sender.sendMessage("[UtazonPlugin] リロードが完了しました");
+        return true;
+    }
+
+    public boolean stockGUI(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args){
+        if (!sender.hasPermission("utazon.stockgui")){
+            sender.sendMessage(ChatColor.RED + command.getPermissionMessage());
+        }
+        if (sender instanceof Player player){
+            Inventory inv = WaitingStockHelper.createGUI(player);
+            player.openInventory(inv);
+        }
+        else{
+            sender.sendMessage(ChatColor.RED + "[UtazonPlugin] このコマンドはコンソールから使用できません");
+        }
         return true;
     }
 

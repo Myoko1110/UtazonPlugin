@@ -1,16 +1,9 @@
 package work.utakatanet.utazonplugin.util;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Item;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import work.utakatanet.utazonplugin.UtazonPlugin;
-import work.utakatanet.utazonplugin.data.ItemMaterial;
+import work.utakatanet.utazonplugin.data.ProductItem;
 import work.utakatanet.utazonplugin.data.OrderList;
 
 import java.sql.*;
@@ -111,7 +104,7 @@ public class DatabaseHelper {
         }
     }
 
-    public static ItemMaterial getMaterial(int itemID) {
+    public static ProductItem getMaterial(int itemID) {
         try {
             Connection cnx = DriverManager.getConnection(
                     String.format("jdbc:mysql://%s:%s/%s", host, port, db),
@@ -131,7 +124,7 @@ public class DatabaseHelper {
                     int amount = rs.getInt("stack_size");
                     int itemStock = rs.getInt("stock");
 
-                    return new ItemMaterial(itemID, itemName, itemMaterialString, itemEnchantmentsJson, amount, itemStock);
+                    return new ProductItem(itemID, itemName, itemMaterialString, itemEnchantmentsJson, amount, itemStock);
                 }else{
                     return null;
                 }
@@ -146,7 +139,7 @@ public class DatabaseHelper {
         return null;
     }
 
-    public static boolean addMaterial(ItemMaterial itemMaterial){
+    public static boolean addMaterial(ProductItem itemMaterial){
         try {
             Connection cnx = DriverManager.getConnection(
                     String.format("jdbc:mysql://%s:%s/%s", host, port, db),

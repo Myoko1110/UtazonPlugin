@@ -1,20 +1,15 @@
 package work.utakatanet.utazonplugin.util;
 
 import com.google.common.reflect.TypeToken;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import work.utakatanet.utazonplugin.UtazonPlugin;
-import work.utakatanet.utazonplugin.data.WaitingStock;
+import work.utakatanet.utazonplugin.data.ItemInfo;
 
 import java.util.*;
 
 import static org.bukkit.Bukkit.createInventory;
-import static org.bukkit.Bukkit.removeRecipe;
 import static work.utakatanet.utazonplugin.UtazonPlugin.gson;
 
 public class WaitingStockHelper {
@@ -52,42 +47,9 @@ public class WaitingStockHelper {
                     String itemEnchantmentsJson = (String) waitingStockInfo.get("item_enchantments");
                     int itemAmount = (int) Math.round((double) waitingStockInfo.get("amount"));
 
-                    // マテリアル設定
-                    NamespacedKey itemMaterialKey = NamespacedKey.minecraft(itemMaterialString);
-                    Material itemMaterial = Material.matchMaterial(itemMaterialKey.getKey());
-                    if (itemMaterial == null){
-                        plugin.getLogger().warning("マテリアルが見つかりませんでした");
-                        return null;
-                    }
+                    ItemInfo waitingStock = new ItemInfo(itemDisplayName, itemMaterialString, itemEnchantmentsJson, itemAmount);
+                    ItemStack itemStack = ItemStackHelper.decodeItemStack(waitingStock);
 
-                    // エンチャント取得
-                    Map<String, Integer> itemEnchantmentsString = gson.fromJson(itemEnchantmentsJson, new TypeToken<Map<String, Integer>>(){}.getType());
-                    Map<Enchantment, Integer> itemEnchantments = new HashMap<>();
-                    for (String enchantmentString : itemEnchantmentsString.keySet()){
-                        NamespacedKey itemEnchantmentKey = NamespacedKey.minecraft(enchantmentString);
-                        Enchantment itemEnchantment = Enchantment.getByKey(itemEnchantmentKey);
-
-                        int itemEnchantmentLv = itemEnchantmentsString.get(enchantmentString);
-
-                        if (itemEnchantment == null){
-                            plugin.getLogger().warning("エンチャントが見つかりませんでした");
-                            return null;
-                        }
-                        itemEnchantments.put(itemEnchantment, itemEnchantmentLv);
-                    }
-
-                    // アイテムにエンチャントを付与
-                    ItemStack itemStack = new ItemStack(itemMaterial, itemAmount);
-                    itemStack.addUnsafeEnchantments(itemEnchantments);
-
-                    // アイテムに名前をつける
-                    ItemMeta itemMeta = itemStack.getItemMeta();
-                    if (itemMeta != null && itemDisplayName != null && !itemDisplayName.isEmpty()) {
-                        itemMeta.setDisplayName(itemDisplayName);
-                    }
-                    itemStack.setItemMeta(itemMeta);
-
-                    // ArrayListに追加
                     ItemStacksArrayList.add(itemStack);
 
                 }else{
@@ -112,7 +74,7 @@ public class WaitingStockHelper {
 
         ArrayList<Map<String, Object>> itemInfoList = new ArrayList<>();
         for (ItemStack itemStack : itemStacks){
-            WaitingStock waitingStock = ItemStackHelper.getItemStackInfo(itemStack);
+            ItemInfo waitingStock = ItemStackHelper.encodeItemStack(itemStack);
 
             if (waitingStock != null) {
                 String itemDisplayName = waitingStock.itemDisplayName;

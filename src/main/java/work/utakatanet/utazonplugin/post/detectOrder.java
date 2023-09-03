@@ -9,7 +9,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 import work.utakatanet.utazonplugin.util.DatabaseHelper;
 import work.utakatanet.utazonplugin.data.OrderList;
-import work.utakatanet.utazonplugin.util.ItemStackHelper;
+import work.utakatanet.utazonplugin.util.ProductHelper;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -53,7 +53,7 @@ public class detectOrder extends BukkitRunnable {
                     int itemQty = item[1];
 
                     // アイテム取得処理
-                    ItemStack itemStack = ItemStackHelper.getItemStack(itemID);
+                    ItemStack itemStack = ProductHelper.getProductStack(itemID);
                     for (int j = 0; j < itemQty; j++){
                         itemList.add(itemStack);
                     }

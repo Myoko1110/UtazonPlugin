@@ -1,6 +1,6 @@
 package work.utakatanet.utazonplugin.data;
 
-public class ItemMaterial {
+public class ProductItem {
 
     public int itemID;
     public String itemDisplayName;
@@ -9,7 +9,7 @@ public class ItemMaterial {
     public int amount;
     public int stock;
 
-    public ItemMaterial(int itemID, String itemDisplayName, String itemMaterial, String itemEnchantments, int amount, int stock){
+    public ProductItem(int itemID, String itemDisplayName, String itemMaterial, String itemEnchantments, int amount, int stock){
         this.itemID = itemID;
         this.itemDisplayName = itemDisplayName;
         this.itemMaterial = itemMaterial;

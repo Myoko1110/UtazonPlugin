@@ -91,7 +91,7 @@ public class DatabaseHelper {
             String sql = "UPDATE utazon_order SET status=? WHERE order_id=?";
             try (PreparedStatement pstmt = cnx.prepareStatement(sql)){
                 pstmt.setBoolean(1, false);
-                pstmt.setString(3, orderID);
+                pstmt.setString(2, orderID);
 
                 pstmt.executeUpdate();
             } catch (SQLException e) {
@@ -118,7 +118,7 @@ public class DatabaseHelper {
                 ResultSet rs = pstmt.executeQuery();
 
                 if (rs.next()) {
-                    String itemName = rs.getString("item_name");
+                    String itemName = rs.getString("item_display_name");
                     String itemMaterialString = rs.getString("item_material");
                     String itemEnchantmentsJson = rs.getString("item_enchantments");
                     int amount = rs.getInt("stack_size");

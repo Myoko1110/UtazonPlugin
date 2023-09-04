@@ -2,7 +2,7 @@ package work.utakatanet.utazonplugin.util;
 
 import org.bukkit.inventory.ItemStack;
 import work.utakatanet.utazonplugin.data.ProductItem;
-import work.utakatanet.utazonplugin.data.ItemInfo;
+import work.utakatanet.utazonplugin.data.DatabaseItem;
 
 public class ProductHelper {
 
@@ -19,7 +19,7 @@ public class ProductHelper {
         int itemStock = itemStacks.length;
 
         ItemStack itemStack = itemStacks[0];
-        ItemInfo itemStackInfo = ItemStackHelper.encodeItemStack(itemStack);
+        DatabaseItem itemStackInfo = ItemStackHelper.encodeItemStack(itemStack);
 
         String itemDisplayName = itemStackInfo.itemDisplayName;
         String itemMaterial = itemStackInfo.itemMaterial;

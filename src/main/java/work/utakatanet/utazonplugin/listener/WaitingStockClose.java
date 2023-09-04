@@ -7,14 +7,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import work.utakatanet.utazonplugin.UtazonPlugin;
 import work.utakatanet.utazonplugin.util.WaitingStockHelper;
 
-import java.util.Arrays;
-
 public class WaitingStockClose implements Listener {
-
-    private static final UtazonPlugin plugin = UtazonPlugin.plugin;
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event){

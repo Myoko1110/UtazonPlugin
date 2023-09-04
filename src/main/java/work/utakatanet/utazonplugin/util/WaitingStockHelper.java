@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import work.utakatanet.utazonplugin.UtazonPlugin;
-import work.utakatanet.utazonplugin.data.ItemInfo;
+import work.utakatanet.utazonplugin.data.DatabaseItem;
 
 import java.util.*;
 
@@ -47,7 +47,7 @@ public class WaitingStockHelper {
                     String itemEnchantmentsJson = (String) waitingStockInfo.get("item_enchantments");
                     int itemAmount = (int) Math.round((double) waitingStockInfo.get("amount"));
 
-                    ItemInfo waitingStock = new ItemInfo(itemDisplayName, itemMaterialString, itemEnchantmentsJson, itemAmount);
+                    DatabaseItem waitingStock = new DatabaseItem(itemDisplayName, itemMaterialString, itemEnchantmentsJson, itemAmount);
                     ItemStack itemStack = ItemStackHelper.decodeItemStack(waitingStock);
 
                     ItemStacksArrayList.add(itemStack);
@@ -74,7 +74,7 @@ public class WaitingStockHelper {
 
         ArrayList<Map<String, Object>> itemInfoList = new ArrayList<>();
         for (ItemStack itemStack : itemStacks){
-            ItemInfo waitingStock = ItemStackHelper.encodeItemStack(itemStack);
+            DatabaseItem waitingStock = ItemStackHelper.encodeItemStack(itemStack);
 
             if (waitingStock != null) {
                 String itemDisplayName = waitingStock.itemDisplayName;

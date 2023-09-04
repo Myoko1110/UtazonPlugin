@@ -4,7 +4,7 @@ import com.github.kuripasanda.economyutilsapi.EconomyUtilsAPI;
 import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
 import com.google.gson.Gson;
 import org.bukkit.plugin.java.JavaPlugin;
-import work.utakatanet.utazonplugin.listener.WaitingStockClose;
+import work.utakatanet.utazonplugin.listener.EventListener;
 import work.utakatanet.utazonplugin.listener.onCommand;
 import work.utakatanet.utazonplugin.post.detectOrder;
 import work.utakatanet.utazonplugin.util.DatabaseHelper;
@@ -30,7 +30,7 @@ public final class UtazonPlugin extends JavaPlugin {
         socketServer.start();
 
         getCommand("utazon").setExecutor(new onCommand());
-        getServer().getPluginManager().registerEvents(new WaitingStockClose(), this);
+        getServer().getPluginManager().registerEvents(new EventListener(), this);
 
         new DatabaseHelper().init();
 

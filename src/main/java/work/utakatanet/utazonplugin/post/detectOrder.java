@@ -1,17 +1,15 @@
 package work.utakatanet.utazonplugin.post;
 
 import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.block.Chest;
-import org.bukkit.block.ShulkerBox;
+import org.bukkit.block.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import work.utakatanet.utazonplugin.UtazonPlugin;
-import work.utakatanet.utazonplugin.util.DatabaseHelper;
 import work.utakatanet.utazonplugin.data.OrderList;
+import work.utakatanet.utazonplugin.util.DatabaseHelper;
 import work.utakatanet.utazonplugin.util.ProductHelper;
 
 import java.time.LocalDateTime;
@@ -22,9 +20,10 @@ import java.util.UUID;
 public class detectOrder extends BukkitRunnable {
 
     private static final UtazonPlugin plugin = UtazonPlugin.plugin;
+    public static final Material[] allowBlocks = {Material.CHEST, Material.HOPPER, Material.SHULKER_BOX, Material.WHITE_SHULKER_BOX, Material.LIGHT_GRAY_SHULKER_BOX, Material.GRAY_SHULKER_BOX, Material.BLACK_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.RED_SHULKER_BOX, Material.ORANGE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX, Material.LIME_SHULKER_BOX, Material.GREEN_SHULKER_BOX, Material.CYAN_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX, Material.BLUE_SHULKER_BOX, Material.PURPLE_SHULKER_BOX, Material.MAGENTA_SHULKER_BOX, Material.PINK_SHULKER_BOX};
 
     @Override
-    public void run(){
+    public void run() {
         ArrayList<OrderList> order = DatabaseHelper.getOrder();
 
         for (OrderList i : order) {
@@ -48,7 +47,6 @@ public class detectOrder extends BukkitRunnable {
                 Location chestLocation = new Location(world, 299, 67, -339);
                 Block block = chestLocation.getBlock();
 
-                Material[] allowBlocks = {Material.CHEST, Material.HOPPER, Material.SHULKER_BOX, Material.WHITE_SHULKER_BOX, Material.LIGHT_GRAY_SHULKER_BOX, Material.GRAY_SHULKER_BOX, Material.BLACK_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.RED_SHULKER_BOX, Material.ORANGE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX, Material.LIME_SHULKER_BOX, Material.GREEN_SHULKER_BOX, Material.CYAN_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX, Material.BLUE_SHULKER_BOX, Material.PURPLE_SHULKER_BOX, Material.MAGENTA_SHULKER_BOX, Material.PINK_SHULKER_BOX};
                 boolean breakOccur = false;
                 for (Material material : allowBlocks) {
                     if (block.getType() == material) {
@@ -56,7 +54,7 @@ public class detectOrder extends BukkitRunnable {
                         break;
                     }
                 }
-                if (!breakOccur){
+                if (!breakOccur) {
                     plugin.getLogger().warning(player.getName() + "のポストが見つかりませんでした");
                     return;
                 }
@@ -64,13 +62,13 @@ public class detectOrder extends BukkitRunnable {
 
                 // アイテムを取得
                 ArrayList<ItemStack> itemList = new ArrayList<>();
-                for (int[] item : orderItem){
+                for (int[] item : orderItem) {
                     int itemID = item[0];
                     int itemQty = item[1];
 
                     // アイテム取得処理
                     ItemStack itemStack = ProductHelper.getProductStack(itemID);
-                    for (int j = 0; j < itemQty; j++){
+                    for (int j = 0; j < itemQty; j++) {
                         itemList.add(itemStack);
                     }
                 }
@@ -82,11 +80,11 @@ public class detectOrder extends BukkitRunnable {
 
                 // シュルカーボックス数に応じ、アイテムを追加
                 ArrayList<ItemStack> shulkerList = new ArrayList<>();
-                for (int j = 1; j <= requiredBox; j++){
+                for (int j = 1; j <= requiredBox; j++) {
                     ItemStack shulker = new ItemStack(Material.BROWN_SHULKER_BOX);
                     ItemMeta itemMeta = shulker.getItemMeta();
 
-                    if (itemMeta != null){
+                    if (itemMeta != null) {
                         itemMeta.setDisplayName("Utazonからのお届け物");
 
                         ArrayList<String> lores = new ArrayList<>();
@@ -103,7 +101,7 @@ public class detectOrder extends BukkitRunnable {
                     int fromIndex = 27 * (j - 1);
                     int toIndex = 27 * j;
 
-                    ItemStack[] itemStackDst= Arrays.copyOfRange(itemStacks, fromIndex, toIndex);
+                    ItemStack[] itemStackDst = Arrays.copyOfRange(itemStacks, fromIndex, toIndex);
                     inv.setContents(itemStackDst);
 
                     bsm.setBlockState(box);
@@ -120,10 +118,31 @@ public class detectOrder extends BukkitRunnable {
         }
     }
 
-    public void postItem(Location location, ArrayList<ItemStack> itemStack){
-        Chest chest = (Chest) location.getBlock().getState();
-        for (ItemStack i : itemStack){
-            chest.getBlockInventory().addItem(i);
+    public void postItem(Location location, ArrayList<ItemStack> itemStack) {
+        try {
+            BlockState b = location.getBlock().getState();
+
+            if (b instanceof Chest) {
+                Chest chest = (Chest) b;
+                for (ItemStack i : itemStack) {
+                    chest.getInventory().addItem(i);
+                }
+
+            } else if (b instanceof ShulkerBox) {
+                ShulkerBox shulkerBox = (ShulkerBox) b;
+                for (ItemStack i : itemStack) {
+                    shulkerBox.getInventory().addItem(i);
+                }
+
+            } else if (b instanceof Hopper) {
+                Hopper hopper = (Hopper) b;
+                for (ItemStack i : itemStack) {
+                    hopper.getInventory().addItem(i);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
+
     }
 }

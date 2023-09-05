@@ -8,3 +8,8 @@ database:
 
 socket:
   port: "44444"
+
+web:
+  # Webと同じにしてください
+  host: "http://localhost:8000"
+  pass: "password"

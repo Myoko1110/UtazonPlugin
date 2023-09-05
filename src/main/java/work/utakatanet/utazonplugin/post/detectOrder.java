@@ -1,5 +1,9 @@
 package work.utakatanet.utazonplugin.post;
 
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.inventory.Inventory;
@@ -8,11 +12,16 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 import work.utakatanet.utazonplugin.data.OrderList;
 import work.utakatanet.utazonplugin.util.DatabaseHelper;
 import work.utakatanet.utazonplugin.util.ProductHelper;
 
+import java.io.IOException;
+import java.net.ConnectException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
@@ -59,6 +68,19 @@ public class detectOrder extends BukkitRunnable {
                 }
                 if (!breakOccur) {
                     plugin.getLogger().warning(player.getName() + "のポストが見つかりませんでした");
+                    if (i.error == null || !i.error.equals("MailboxNotFound")){
+                        try {
+                            HttpURLConnection connection = getHttpConnection("/post/mailbox_notfound", player, i.orderID);
+                            connection.getResponseCode();
+
+                            DatabaseHelper.errorOrder(i.orderID, "MailboxNotFound");
+
+                        }catch (ConnectException e){
+                            plugin.getLogger().warning("WebのUtazonに接続できませんでした");
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
                     return;
                 }
 
@@ -73,28 +95,30 @@ public class detectOrder extends BukkitRunnable {
                     bookMeta.setAuthor("Utazon");
 
                     NumberFormat numberFormat = new DecimalFormat("###,##0.00");
-                    String value = String.format(
-                            "           納品書\n発行 Utazon\n納品日 %s/%s/%s\n%s様\n\n下記の通り納品いたします\n\n合計額：$%s\n────────────",
-                            now.getYear(), now.getMonthValue(), now.getDayOfMonth(), player.getName(), numberFormat.format(i.amount));
 
-                    StringBuilder itemInfo = new StringBuilder();
+                    ComponentBuilder pageComponents = new ComponentBuilder("           納品書 \n発行 ")
+                            .color(ChatColor.RESET)
+                            .append("Utazon").color(ChatColor.BLUE).underlined(true)
+                            .append(String.format("\n納品日 %s/%s/%s", now.getYear(), now.getMonthValue(), now.getDayOfMonth())).color(ChatColor.RESET).underlined(false)
+                            .append("\n" + player.getName() + "様\n\n下記の通り納品いたします\n\n")
+                            .append("合計額：$" + numberFormat.format(i.amount) + "\n───────────");
+
+
                     for (int[] item : orderItem) {
                         int itemID = item[0];
-                        ArrayList<Object> infoList = DatabaseHelper.geItemInfo(itemID);
-                        if (infoList != null) {
-                            String itemFormat;
-                            if (infoList.get(0).toString().length() > 11) {
-                                itemFormat = "\n・" + infoList.get(0).toString().substring(0, 10) + "…";
-                            } else {
-                                itemFormat = "\n・" + infoList.get(0).toString();
-                            }
-                            itemInfo.append(itemFormat);
+                        ArrayList<String> infoList = DatabaseHelper.geItemInfo(itemID);
+
+                        if (infoList != null){
+                            String itemFormat = getitemList(item, infoList);
+                            pageComponents.append(itemFormat);
                         }
                     }
 
-                    value += itemInfo;
+                    BaseComponent[] pageComponentsFormat = pageComponents.create();
+                    pageComponentsFormat[1].setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, UtazonPlugin.webHost));
 
-                    bookMeta.addPage(value);
+
+                    bookMeta.spigot().addPage(pageComponentsFormat);
                     deliverySlip.setItemMeta(bookMeta);
                     itemList.add(deliverySlip);
                 }
@@ -111,51 +135,28 @@ public class detectOrder extends BukkitRunnable {
                         itemList.add(itemStack);
                     }
                 }
-                ItemStack[] itemStacks = new ItemStack[itemList.size()];
-                itemStacks = itemList.toArray(itemStacks);
-
-                // 必要なシュルカーボックスを計算
-                int requiredBox = (int) Math.ceil((double) itemStacks.length / 27);
-
-                // シュルカーボックス数に応じ、アイテムを追加
-                ArrayList<ItemStack> shulkerList = new ArrayList<>();
-                for (int j = 1; j <= requiredBox; j++) {
-                    ItemStack shulker = new ItemStack(Material.BROWN_SHULKER_BOX);
-                    ItemMeta itemMeta = shulker.getItemMeta();
-
-                    if (itemMeta != null) {
-                        itemMeta.setDisplayName("Utazonからのお届け物");
-
-                        ArrayList<String> lores = new ArrayList<>();
-                        lores.add("注文番号: " + i.orderID);
-                        itemMeta.setLore(lores);
-
-                        shulker.setItemMeta(itemMeta);
-                    }
-
-                    BlockStateMeta bsm = (BlockStateMeta) shulker.getItemMeta();
-                    ShulkerBox box = (ShulkerBox) bsm.getBlockState();
-                    Inventory inv = box.getInventory();
-
-                    int fromIndex = 27 * (j - 1);
-                    int toIndex = 27 * j;
-
-                    ItemStack[] itemStackDst = Arrays.copyOfRange(itemStacks, fromIndex, toIndex);
-                    inv.setContents(itemStackDst);
-
-                    bsm.setBlockState(box);
-                    shulker.setItemMeta(bsm);
-
-                    shulkerList.add(shulker);
-
-                }
+                ArrayList<ItemStack> shulkerList = getShulkerList(i, itemList);
 
 
                 boolean post = postItem(chestLocation, shulkerList);
                 if (post) {
                     DatabaseHelper.completeOrder(i.orderID);
                 }else{
-                    plugin.getLogger().info(player.getName() + "の注文のアイテムを追加するスペースがありませんでした");
+                    plugin.getLogger().info(player.getName() + "のポストにアイテムを追加するスペースがありませんでした");
+
+                    if (i.error == null || !i.error.equals("MailboxFull")){
+                        try {
+                            HttpURLConnection connection = getHttpConnection("/post/mailbox_full", player, i.orderID);
+                            connection.getResponseCode();
+
+                            DatabaseHelper.errorOrder(i.orderID, "MailboxFull");
+
+                        }catch (ConnectException e){
+                            plugin.getLogger().warning("WebのUtazonに接続できませんでした");
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         }
@@ -163,6 +164,74 @@ public class detectOrder extends BukkitRunnable {
         if (!order.isEmpty()) {
             plugin.getLogger().info("アイテムを配達しました");
         }
+    }
+
+    @NotNull
+    private static ArrayList<ItemStack> getShulkerList(OrderList i, ArrayList<ItemStack> itemList) {
+        ItemStack[] itemStacks = new ItemStack[itemList.size()];
+        itemStacks = itemList.toArray(itemStacks);
+
+        // 必要なシュルカーボックスを計算
+        int requiredBox = (int) Math.ceil((double) itemStacks.length / 27);
+
+        // シュルカーボックス数に応じ、アイテムを追加
+        ArrayList<ItemStack> shulkerList = new ArrayList<>();
+        for (int j = 1; j <= requiredBox; j++) {
+            ItemStack shulker = new ItemStack(Material.BROWN_SHULKER_BOX);
+            ItemMeta itemMeta = shulker.getItemMeta();
+
+            if (itemMeta != null) {
+                itemMeta.setDisplayName("Utazonからのお届け物");
+
+                ArrayList<String> lores = new ArrayList<>();
+                lores.add("注文番号: " + i.orderID);
+                itemMeta.setLore(lores);
+
+                shulker.setItemMeta(itemMeta);
+            }
+
+            BlockStateMeta bsm = (BlockStateMeta) shulker.getItemMeta();
+            ShulkerBox box = (ShulkerBox) bsm.getBlockState();
+            Inventory inv = box.getInventory();
+
+            int fromIndex = 27 * (j - 1);
+            int toIndex = 27 * j;
+
+            ItemStack[] itemStackDst = Arrays.copyOfRange(itemStacks, fromIndex, toIndex);
+            inv.setContents(itemStackDst);
+
+            bsm.setBlockState(box);
+            shulker.setItemMeta(bsm);
+
+            shulkerList.add(shulker);
+
+        }
+        return shulkerList;
+    }
+
+    @NotNull
+    private static String getitemList(int[] item, ArrayList<String> infoList) {
+        String itemName = infoList.get(0);
+        String itemPrice = infoList.get(1);
+
+        String itemFormat;
+        if (infoList.get(0).length() > 11) {
+            itemFormat = "\n・" + itemName.substring(0, 10) + "…"  + "\n　$" + itemPrice  + " ×" + item[1];
+        } else {
+            itemFormat = "\n・" + itemName + "\n　$" + itemPrice  + " ×" + item[1];
+        }
+        return itemFormat;
+    }
+
+    @NotNull
+    private static HttpURLConnection getHttpConnection(String path, OfflinePlayer player, String orderID) throws IOException {
+        URL url = new URL(new URL(UtazonPlugin.webHost), path);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("pass", UtazonPlugin.webPass);
+        connection.setRequestProperty("mcuuid", player.getUniqueId().toString());
+        connection.setRequestProperty("orderid", orderID);
+        return connection;
     }
 
     public boolean postItem(Location location, ArrayList<ItemStack> itemStack) {

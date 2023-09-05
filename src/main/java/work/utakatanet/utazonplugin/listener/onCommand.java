@@ -108,6 +108,8 @@ public class onCommand implements CommandExecutor, TabCompleter {
         new DatabaseHelper().loadSettings();
         new DatabaseHelper().createTable();
         new SocketServer().loadSettings();
+        UtazonPlugin.webHost = plugin.getConfig().getString("web.host");
+        UtazonPlugin.webPass = plugin.getConfig().getString("web.pass");
 
         stopSocket();
         startSocket();

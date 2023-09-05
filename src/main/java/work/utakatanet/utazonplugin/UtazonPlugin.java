@@ -18,6 +18,9 @@ public final class UtazonPlugin extends JavaPlugin {
     public static UtazonPlugin plugin;
     public static SocketServer socketServer;
 
+    public static String webHost;
+    public static String webPass;
+
     @Override
     public void onEnable() {
         plugin = this;
@@ -25,6 +28,9 @@ public final class UtazonPlugin extends JavaPlugin {
 
         getLogger().info("UtazonPlugin が有効になりました");
         saveDefaultConfig();
+
+        webHost = getConfig().getString("web.host");
+        webPass = getConfig().getString("web.pass");
 
         socketServer = new SocketServer();
         socketServer.start();

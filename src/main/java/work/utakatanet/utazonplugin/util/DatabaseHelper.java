@@ -43,7 +43,7 @@ public class DatabaseHelper {
                     user,
                     pass
             );
-            pstmt = cnx.prepareStatement("SELECT * FROM utazon_order WHERE status=true");
+            pstmt = cnx.prepareStatement("SELECT * FROM utazon_order WHERE status=true and canceled=false");
 
             rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -54,8 +54,9 @@ public class DatabaseHelper {
                 String orderID = rs.getString("order_id");
                 double amount = rs.getDouble("amount");
                 int usedPoint = rs.getInt("used_point");
+                String error = rs.getString("error");
 
-                OrderList orderListChild = new OrderList(uuid, orderItem, deliveryTime, orderTime, orderID, amount, usedPoint);
+                OrderList orderListChild = new OrderList(uuid, orderItem, deliveryTime, orderTime, orderID, amount, usedPoint, error);
                 orderList.add(orderListChild);
             }
 
@@ -93,6 +94,30 @@ public class DatabaseHelper {
             String sql = "UPDATE utazon_order SET status=? WHERE order_id=?";
             try (PreparedStatement pstmt = cnx.prepareStatement(sql)){
                 pstmt.setBoolean(1, false);
+                pstmt.setString(2, orderID);
+
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void errorOrder(String orderID, String error) {
+        try {
+            Connection cnx = DriverManager.getConnection(
+                    String.format("jdbc:mysql://%s:%s/%s", host, port, db),
+                    user,
+                    pass
+            );
+
+            String sql = "UPDATE utazon_order SET error=? WHERE order_id=?";
+            try (PreparedStatement pstmt = cnx.prepareStatement(sql)){
+                pstmt.setString(1, error);
                 pstmt.setString(2, orderID);
 
                 pstmt.executeUpdate();
@@ -231,7 +256,7 @@ public class DatabaseHelper {
         return null;
     }
 
-    public static ArrayList<Object> geItemInfo(int itemID) {
+    public static ArrayList<String> geItemInfo(int itemID) {
         try {
             Connection cnx = DriverManager.getConnection(
                     String.format("jdbc:mysql://%s:%s/%s", host, port, db),
@@ -246,9 +271,9 @@ public class DatabaseHelper {
 
                 if (rs.next()) {
                     String itemName = rs.getString("item_name");
-                    double itemPrice = rs.getDouble("price");
+                    String itemPrice = rs.getString("price");
 
-                    ArrayList<Object> infoList = new ArrayList<>();
+                    ArrayList<String> infoList = new ArrayList<>();
                     infoList.add(itemName);
                     infoList.add(itemPrice);
 
@@ -288,7 +313,7 @@ public class DatabaseHelper {
                     user,
                     pass
             );
-            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_order` (mc_uuid VARCHAR(36), order_item JSON, delivery_time DATETIME, order_time DATETIME, order_id VARCHAR(18) UNIQUE)");
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_order` (mc_uuid VARCHAR(36), order_item JSON, delivery_time DATETIME, order_time DATETIME, order_id VARCHAR(18) UNIQUE, error VARCHAR(64))");
             pstmt.executeUpdate();
 
             pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_itemstack` (item_id BIGINT UNIQUE, item_display_name VARCHAR(64), item_material VARCHAR(64), item_enchantments JSON, stack_size INT, stock BIGINT)");

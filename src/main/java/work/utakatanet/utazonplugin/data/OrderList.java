@@ -12,8 +12,9 @@ public class OrderList {
     public String orderID;
     public double amount;
     public int usedPoint;
+    public String error;
 
-    public OrderList(UUID uuid, int[][] orderItem, LocalDateTime deliveryTime, LocalDateTime orderTime, String orderID, double amount, int usedPoint) {
+    public OrderList(UUID uuid, int[][] orderItem, LocalDateTime deliveryTime, LocalDateTime orderTime, String orderID, double amount, int usedPoint, String error) {
         this.uuid = uuid;
         this.orderItem = orderItem;
         this.deliveryTime = deliveryTime;
@@ -21,7 +22,7 @@ public class OrderList {
         this.orderID = orderID;
         this.amount = amount;
         this.usedPoint = usedPoint;
-
+        this.error = error;
     }
 
 }

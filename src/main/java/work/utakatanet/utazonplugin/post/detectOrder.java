@@ -68,21 +68,26 @@ public class detectOrder extends BukkitRunnable {
                 // 納品書を作成
                 ItemStack deliverySlip = new ItemStack(Material.WRITTEN_BOOK);
                 BookMeta bookMeta = (BookMeta) deliverySlip.getItemMeta();
-                if (bookMeta != null){
+                if (bookMeta != null) {
                     bookMeta.setTitle("納品書 #" + i.orderID);
                     bookMeta.setAuthor("Utazon");
 
                     NumberFormat numberFormat = new DecimalFormat("###,##0.00");
                     String value = String.format(
-                            "           納品書\n              発行 Utazon\n納品日 %s/%s/%s\n\n下記の通り納品いたします\n\n合計額：$%s\n────────────",
-                            now.getYear(), now.getMonthValue(), now.getDayOfMonth(), numberFormat.format(i.amount));
+                            "           納品書\n発行 Utazon\n納品日 %s/%s/%s\n%s様\n\n下記の通り納品いたします\n\n合計額：$%s\n────────────",
+                            now.getYear(), now.getMonthValue(), now.getDayOfMonth(), player.getName(), numberFormat.format(i.amount));
 
                     StringBuilder itemInfo = new StringBuilder();
-                    for (int[] item: orderItem){
+                    for (int[] item : orderItem) {
                         int itemID = item[0];
                         ArrayList<Object> infoList = DatabaseHelper.geItemInfo(itemID);
-                        if (infoList != null){
-                            String itemFormat = "\n・" + infoList.get(0).toString();
+                        if (infoList != null) {
+                            String itemFormat;
+                            if (infoList.get(0).toString().length() > 11) {
+                                itemFormat = "\n・" + infoList.get(0).toString().substring(0, 10) + "…";
+                            } else {
+                                itemFormat = "\n・" + infoList.get(0).toString();
+                            }
                             itemInfo.append(itemFormat);
                         }
                     }
@@ -146,37 +151,72 @@ public class detectOrder extends BukkitRunnable {
                 }
 
 
-                postItem(chestLocation, shulkerList);
-                DatabaseHelper.completeOrder(i.orderID);
+                boolean post = postItem(chestLocation, shulkerList);
+                if (post) {
+                    DatabaseHelper.completeOrder(i.orderID);
+                }else{
+                    plugin.getLogger().info(player.getName() + "の注文のアイテムを追加するスペースがありませんでした");
+                }
             }
+        }
+
+        if (!order.isEmpty()) {
+            plugin.getLogger().info("アイテムを配達しました");
         }
     }
 
-    public void postItem(Location location, ArrayList<ItemStack> itemStack) {
+    public boolean postItem(Location location, ArrayList<ItemStack> itemStack) {
         try {
             BlockState b = location.getBlock().getState();
 
-            if (b instanceof Chest) {
-                Chest chest = (Chest) b;
+            int emptySlots = 0;
+
+            if (b instanceof Chest chest) {
+                for (ItemStack item : chest.getInventory().getContents()) {
+                    if (item == null) {
+                        emptySlots++;
+                    }
+                }
+                if (emptySlots < itemStack.size()) {
+                    return false;
+                }
+
                 for (ItemStack i : itemStack) {
                     chest.getInventory().addItem(i);
                 }
 
-            } else if (b instanceof ShulkerBox) {
-                ShulkerBox shulkerBox = (ShulkerBox) b;
+            } else if (b instanceof ShulkerBox shulkerBox) {
+                for (ItemStack item : shulkerBox.getInventory().getContents()) {
+                    if (item == null) {
+                        emptySlots++;
+                    }
+                }
+                if (emptySlots < itemStack.size()) {
+                    return false;
+                }
+
                 for (ItemStack i : itemStack) {
                     shulkerBox.getInventory().addItem(i);
                 }
 
-            } else if (b instanceof Hopper) {
-                Hopper hopper = (Hopper) b;
+            } else if (b instanceof Hopper hopper) {
+                for (ItemStack item : hopper.getInventory().getContents()) {
+                    if (item == null) {
+                        emptySlots++;
+                    }
+                }
+                if (emptySlots < itemStack.size()) {
+                    return false;
+                }
+
                 for (ItemStack i : itemStack) {
                     hopper.getInventory().addItem(i);
                 }
             }
-        }catch (Exception e){
+            return true;
+        } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-
     }
 }

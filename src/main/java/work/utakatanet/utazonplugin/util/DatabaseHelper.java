@@ -52,8 +52,10 @@ public class DatabaseHelper {
                 LocalDateTime deliveryTime = LocalDateTime.parse(rs.getString("delivery_time"), formatter);
                 LocalDateTime orderTime = LocalDateTime.parse(rs.getString("order_time"), formatter);
                 String orderID = rs.getString("order_id");
+                double amount = rs.getDouble("amount");
+                int usedPoint = rs.getInt("used_point");
 
-                OrderList orderListChild = new OrderList(uuid, orderItem, deliveryTime, orderTime, orderID);
+                OrderList orderListChild = new OrderList(uuid, orderItem, deliveryTime, orderTime, orderID, amount, usedPoint);
                 orderList.add(orderListChild);
             }
 
@@ -215,6 +217,42 @@ public class DatabaseHelper {
                     String value = rs.getString("value");
                     return value;
 
+                }else{
+                    return null;
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static ArrayList<Object> geItemInfo(int itemID) {
+        try {
+            Connection cnx = DriverManager.getConnection(
+                    String.format("jdbc:mysql://%s:%s/%s", host, port, db),
+                    user,
+                    pass
+            );
+
+            String sql = "SELECT * FROM utazon_item WHERE item_id=?";
+            try(PreparedStatement pstmt = cnx.prepareStatement(sql)){
+                pstmt.setInt(1, itemID);
+                ResultSet rs = pstmt.executeQuery();
+
+                if (rs.next()) {
+                    String itemName = rs.getString("item_name");
+                    double itemPrice = rs.getDouble("price");
+
+                    ArrayList<Object> infoList = new ArrayList<>();
+                    infoList.add(itemName);
+                    infoList.add(itemPrice);
+
+                    return infoList;
                 }else{
                     return null;
                 }

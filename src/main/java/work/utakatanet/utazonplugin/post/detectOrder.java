@@ -5,6 +5,7 @@ import org.bukkit.block.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import work.utakatanet.utazonplugin.UtazonPlugin;
@@ -12,6 +13,8 @@ import work.utakatanet.utazonplugin.data.OrderList;
 import work.utakatanet.utazonplugin.util.DatabaseHelper;
 import work.utakatanet.utazonplugin.util.ProductHelper;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,8 +63,39 @@ public class detectOrder extends BukkitRunnable {
                 }
 
 
-                // アイテムを取得
                 ArrayList<ItemStack> itemList = new ArrayList<>();
+
+                // 納品書を作成
+                ItemStack deliverySlip = new ItemStack(Material.WRITTEN_BOOK);
+                BookMeta bookMeta = (BookMeta) deliverySlip.getItemMeta();
+                if (bookMeta != null){
+                    bookMeta.setTitle("納品書 #" + i.orderID);
+                    bookMeta.setAuthor("Utazon");
+
+                    NumberFormat numberFormat = new DecimalFormat("###,##0.00");
+                    String value = String.format(
+                            "           納品書\n              発行 Utazon\n納品日 %s/%s/%s\n\n下記の通り納品いたします\n\n合計額：$%s\n────────────",
+                            now.getYear(), now.getMonthValue(), now.getDayOfMonth(), numberFormat.format(i.amount));
+
+                    StringBuilder itemInfo = new StringBuilder();
+                    for (int[] item: orderItem){
+                        int itemID = item[0];
+                        ArrayList<Object> infoList = DatabaseHelper.geItemInfo(itemID);
+                        if (infoList != null){
+                            String itemFormat = "\n・" + infoList.get(0).toString();
+                            itemInfo.append(itemFormat);
+                        }
+                    }
+
+                    value += itemInfo;
+
+                    bookMeta.addPage(value);
+                    deliverySlip.setItemMeta(bookMeta);
+                    itemList.add(deliverySlip);
+                }
+
+
+                // アイテムを取得
                 for (int[] item : orderItem) {
                     int itemID = item[0];
                     int itemQty = item[1];

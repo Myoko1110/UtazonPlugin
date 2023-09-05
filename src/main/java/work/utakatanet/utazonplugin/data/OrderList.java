@@ -10,13 +10,18 @@ public class OrderList {
     public LocalDateTime deliveryTime;
     public LocalDateTime orderTime;
     public String orderID;
+    public double amount;
+    public int usedPoint;
 
-    public OrderList(UUID uuid, int[][] orderItem, LocalDateTime deliveryTime, LocalDateTime orderTime, String orderID) {
+    public OrderList(UUID uuid, int[][] orderItem, LocalDateTime deliveryTime, LocalDateTime orderTime, String orderID, double amount, int usedPoint) {
         this.uuid = uuid;
         this.orderItem = orderItem;
         this.deliveryTime = deliveryTime;
         this.orderTime = orderTime;
         this.orderID = orderID;
+        this.amount = amount;
+        this.usedPoint = usedPoint;
+
     }
 
 }

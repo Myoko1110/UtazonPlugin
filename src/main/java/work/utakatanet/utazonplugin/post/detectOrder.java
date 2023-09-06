@@ -68,18 +68,16 @@ public class detectOrder extends BukkitRunnable {
                 }
                 if (!breakOccur) {
                     plugin.getLogger().warning(player.getName() + "のポストが見つかりませんでした");
-                    if (i.error == null || !i.error.equals("MailboxNotFound")){
-                        try {
-                            HttpURLConnection connection = getHttpConnection("/post/mailbox_notfound", player, i.orderID);
-                            connection.getResponseCode();
+                    try {
+                        HttpURLConnection connection = getHttpConnection("/post/mailbox_notfound", player, i.orderID);
+                        connection.getResponseCode();
 
-                            DatabaseHelper.errorOrder(i.orderID, "MailboxNotFound");
+                        DatabaseHelper.errorOrder(i.orderID, "MailboxNotFound");
 
-                        }catch (ConnectException e){
-                            plugin.getLogger().warning("WebのUtazonに接続できませんでした");
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
+                    }catch (ConnectException e){
+                        plugin.getLogger().warning("WebのUtazonに接続できませんでした");
+                    }catch (Exception e){
+                        e.printStackTrace();
                     }
                     return;
                 }
@@ -141,21 +139,29 @@ public class detectOrder extends BukkitRunnable {
                 boolean post = postItem(chestLocation, shulkerList);
                 if (post) {
                     DatabaseHelper.completeOrder(i.orderID);
+                    try {
+                        HttpURLConnection connection = getHttpConnection("/post/order_complete", player, i.orderID);
+                        connection.getResponseCode();
+
+                    }catch (ConnectException e){
+                        plugin.getLogger().warning("WebのUtazonに接続できませんでした");
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
                 }else{
                     plugin.getLogger().info(player.getName() + "のポストにアイテムを追加するスペースがありませんでした");
 
-                    if (i.error == null || !i.error.equals("MailboxFull")){
-                        try {
-                            HttpURLConnection connection = getHttpConnection("/post/mailbox_full", player, i.orderID);
-                            connection.getResponseCode();
+                    try {
+                        HttpURLConnection connection = getHttpConnection("/post/mailbox_full", player, i.orderID);
+                        connection.getResponseCode();
 
-                            DatabaseHelper.errorOrder(i.orderID, "MailboxFull");
+                        DatabaseHelper.errorOrder(i.orderID, "MailboxFull");
 
-                        }catch (ConnectException e){
-                            plugin.getLogger().warning("WebのUtazonに接続できませんでした");
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
+                    }catch (ConnectException e){
+                        plugin.getLogger().warning("WebのUtazonに接続できませんでした");
+                    }catch (Exception e){
+                        e.printStackTrace();
                     }
                 }
             }

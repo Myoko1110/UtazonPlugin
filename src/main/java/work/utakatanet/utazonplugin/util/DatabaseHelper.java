@@ -91,7 +91,7 @@ public class DatabaseHelper {
                     pass
             );
 
-            String sql = "UPDATE utazon_order SET status=? WHERE order_id=?";
+            String sql = "UPDATE utazon_order SET status=?, error=null WHERE order_id=?";
             try (PreparedStatement pstmt = cnx.prepareStatement(sql)){
                 pstmt.setBoolean(1, false);
                 pstmt.setString(2, orderID);

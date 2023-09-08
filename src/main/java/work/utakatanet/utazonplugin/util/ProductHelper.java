@@ -7,7 +7,7 @@ import work.utakatanet.utazonplugin.data.DatabaseItem;
 public class ProductHelper {
 
     public static ItemStack getProductStack(int itemID) {
-        ProductItem itemMaterialInfo = DatabaseHelper.getMaterial(itemID);
+        ProductItem itemMaterialInfo = DatabaseHelper.getItemStack(itemID);
         return ItemStackHelper.decodeItemStack(itemMaterialInfo);
     }
 
@@ -27,7 +27,7 @@ public class ProductHelper {
         int itemAmount = itemStackInfo.amount;
 
         ProductItem MaterialInfo = new ProductItem(itemID, itemDisplayName, itemMaterial, itemEnchantmentsJson, itemAmount, itemStock);
-        return DatabaseHelper.addMaterial(MaterialInfo);
+        return DatabaseHelper.addItemStack(MaterialInfo);
     }
 
 

@@ -131,7 +131,7 @@ public class DatabaseHelper {
         }
     }
 
-    public static ProductItem getMaterial(int itemID) {
+    public static ProductItem getItemStack(int itemID) {
         try {
             Connection cnx = DriverManager.getConnection(
                     String.format("jdbc:mysql://%s:%s/%s", host, port, db),
@@ -166,7 +166,7 @@ public class DatabaseHelper {
         return null;
     }
 
-    public static boolean addMaterial(ProductItem itemMaterial){
+    public static boolean addItemStack(ProductItem itemMaterial){
         try {
             Connection cnx = DriverManager.getConnection(
                     String.format("jdbc:mysql://%s:%s/%s", host, port, db),

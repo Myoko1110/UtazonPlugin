@@ -19,7 +19,7 @@ public class WaitingStockHelper {
     public static Inventory createGUI(Player player){
         Inventory inv = createInventory(null,54,"WaitingStock");
 
-        ItemStack[] waitingStock = get(player);
+        ItemStack[] waitingStock = get(player.getUniqueId());
         if (waitingStock != null){
             for (int i = 0; i < waitingStock.length; i++){
                 inv.setItem(i, waitingStock[i]);
@@ -31,9 +31,7 @@ public class WaitingStockHelper {
         // https://www.spigotmc.org/wiki/creating-a-gui-inventory/
     }
 
-    public static ItemStack[] get(Player player){
-        UUID uuid = player.getUniqueId();
-
+    public static ItemStack[] get(UUID uuid){
         String waitingStockJson = DatabaseHelper.getWaitingStock(uuid);
         ArrayList<Map<String, Object>> waitingStocks = gson.fromJson(waitingStockJson, new TypeToken<ArrayList<Map<String, Object>>>(){}.getType());
 

@@ -37,6 +37,7 @@ public class detectOrder extends BukkitRunnable {
     @Override
     public void run() {
         ArrayList<OrderList> order = DatabaseHelper.getOrder();
+        boolean isExist = false;
 
         for (OrderList i : order) {
 
@@ -44,6 +45,7 @@ public class detectOrder extends BukkitRunnable {
             LocalDateTime now = LocalDateTime.now();
 
             if (deliveryTime.isBefore(now)) {
+                isExist = true;
 
                 UUID uuid = i.uuid;
                 int[][] orderItem = i.orderItem;
@@ -167,7 +169,7 @@ public class detectOrder extends BukkitRunnable {
             }
         }
 
-        if (!order.isEmpty()) {
+        if (isExist) {
             plugin.getLogger().info("アイテムを配達しました");
         }
     }

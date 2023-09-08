@@ -3,10 +3,16 @@ package work.utakatanet.utazonplugin.util;
 import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
 import com.google.gson.Gson;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.inventory.ItemStack;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class SocketServer implements Runnable {
@@ -92,17 +98,17 @@ public class SocketServer implements Runnable {
                     outputStream.flush();
 
                 }else if ((receivedJson[0].equalsIgnoreCase("withdrawPlayer"))){
-                    UUID finalUuid = uuid;
+                    UUID finalUUID = uuid;
                     plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                        ecoApi.withdrawPlayer(finalUuid, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』で購入", receivedJson[3]);
+                        ecoApi.withdrawPlayer(finalUUID, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』で購入", receivedJson[3]);
                         return null;
                     });
                     outputStream.write("Success".getBytes());
                     outputStream.flush();
                 }else if ((receivedJson[0].equalsIgnoreCase("depositPlayer"))){
-                    UUID finalUuid = uuid;
+                    UUID finalUUID = uuid;
                     plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                        ecoApi.depositPlayer(finalUuid, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』からの返金", receivedJson[3]);
+                        ecoApi.depositPlayer(finalUUID, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』からの返金", receivedJson[3]);
                         return null;
                     });
                     outputStream.write("Success".getBytes());

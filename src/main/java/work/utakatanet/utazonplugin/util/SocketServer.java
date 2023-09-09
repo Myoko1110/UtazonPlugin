@@ -87,7 +87,6 @@ public class SocketServer implements Runnable {
                     outputStream.write("Invalid UUID".getBytes());
                     outputStream.flush();
                 }
-
                 if (receivedJson[0].equalsIgnoreCase("getBalance")){
                     // Balance取得
                     double PlayerBalance = ecoApi.getBalance(uuid);
@@ -101,6 +100,14 @@ public class SocketServer implements Runnable {
                     UUID finalUUID = uuid;
                     plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
                         ecoApi.withdrawPlayer(finalUUID, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』で購入", receivedJson[3]);
+                        return null;
+                    });
+                    outputStream.write("Success".getBytes());
+                    outputStream.flush();
+                }else if ((receivedJson[0].equalsIgnoreCase("depositRevenues"))){
+                    UUID finalUUID = uuid;
+                    plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
+                        ecoApi.depositPlayer(finalUUID, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』からの売上入金", receivedJson[3]);
                         return null;
                     });
                     outputStream.write("Success".getBytes());

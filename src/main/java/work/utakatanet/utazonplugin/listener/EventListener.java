@@ -21,7 +21,7 @@ public class EventListener implements Listener {
     public void onInventoryClose(InventoryCloseEvent e){
         Inventory inv = e.getInventory();
 
-        if (inv.getHolder() instanceof Block || !e.getView().getTitle().equals("WaitingStock")){
+        if (inv.getHolder() instanceof Block || !e.getView().getTitle().equals("待機ストック")){
             return;
         }
 

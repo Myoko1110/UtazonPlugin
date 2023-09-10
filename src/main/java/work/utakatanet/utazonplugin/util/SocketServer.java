@@ -115,7 +115,7 @@ public class SocketServer implements Runnable {
                 }else if ((receivedJson[0].equalsIgnoreCase("depositPlayer"))){
                     UUID finalUUID = uuid;
                     plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                        ecoApi.depositPlayer(finalUUID, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』からの返金", receivedJson[3]);
+                        ecoApi.depositPlayer(finalUUID, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』からのキャンセルに伴う返金", receivedJson[3]);
                         return null;
                     });
                     outputStream.write("Success".getBytes());

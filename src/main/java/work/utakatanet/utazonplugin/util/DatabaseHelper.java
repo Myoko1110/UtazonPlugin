@@ -148,10 +148,11 @@ public class DatabaseHelper {
                     String itemName = rs.getString("item_display_name");
                     String itemMaterialString = rs.getString("item_material");
                     String itemEnchantmentsJson = rs.getString("item_enchantments");
+                    int itemDamage = rs.getInt("item_damage");
                     int amount = rs.getInt("stack_size");
                     int itemStock = rs.getInt("stock");
 
-                    return new ProductItem(itemID, itemName, itemMaterialString, itemEnchantmentsJson, amount, itemStock);
+                    return new ProductItem(itemID, itemName, itemMaterialString, itemEnchantmentsJson, itemDamage, amount, itemStock);
                 }else{
                     return null;
                 }
@@ -316,7 +317,7 @@ public class DatabaseHelper {
             pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_order` (mc_uuid VARCHAR(36), order_item JSON, delivery_time DATETIME, order_time DATETIME, order_id VARCHAR(18) UNIQUE, error VARCHAR(64))");
             pstmt.executeUpdate();
 
-            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_itemstack` (item_id BIGINT UNIQUE, item_display_name VARCHAR(64), item_material VARCHAR(64), item_enchantments JSON, stack_size INT, stock BIGINT)");
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_itemstack` (item_id BIGINT UNIQUE, item_display_name VARCHAR(64), item_material VARCHAR(64), item_enchantments JSON, item_damage INT, stack_size INT, stock BIGINT)");
             pstmt.executeUpdate();
 
         } catch (SQLException e) {

@@ -4,6 +4,7 @@ import com.google.common.reflect.TypeToken;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 import work.utakatanet.utazonplugin.data.DatabaseItem;
 
@@ -16,8 +17,8 @@ public class WaitingStockHelper {
 
     private static final UtazonPlugin plugin = UtazonPlugin.plugin;
 
-    public static Inventory createGUI(Player player){
-        Inventory inv = createInventory(null,54,"WaitingStock");
+    public static Inventory createGUI(@NotNull Player player){
+        Inventory inv = createInventory(null,54,"待機ストック");
 
         ItemStack[] waitingStock = get(player.getUniqueId());
         if (waitingStock != null){
@@ -31,7 +32,7 @@ public class WaitingStockHelper {
         // https://www.spigotmc.org/wiki/creating-a-gui-inventory/
     }
 
-    public static ItemStack[] get(UUID uuid){
+    public static ItemStack[] get(@NotNull UUID uuid){
         String waitingStockJson = DatabaseHelper.getWaitingStock(uuid);
         ArrayList<Map<String, Object>> waitingStocks = gson.fromJson(waitingStockJson, new TypeToken<ArrayList<Map<String, Object>>>(){}.getType());
 
@@ -43,9 +44,10 @@ public class WaitingStockHelper {
                     String itemDisplayName = (String) waitingStockInfo.get("item_display_name");
                     String itemMaterialString = (String) waitingStockInfo.get("item_material");
                     String itemEnchantmentsJson = (String) waitingStockInfo.get("item_enchantments");
-                    int itemAmount = (int) Math.round((double) waitingStockInfo.get("amount"));
+                    int itemDamage = (int) (double) waitingStockInfo.get("item_damage");
+                    int itemAmount = (int) (double) waitingStockInfo.get("amount");
 
-                    DatabaseItem waitingStock = new DatabaseItem(itemDisplayName, itemMaterialString, itemEnchantmentsJson, itemAmount);
+                    DatabaseItem waitingStock = new DatabaseItem(itemDisplayName, itemMaterialString, itemEnchantmentsJson, itemDamage, itemAmount);
                     ItemStack itemStack = ItemStackHelper.decodeItemStack(waitingStock);
 
                     ItemStacksArrayList.add(itemStack);
@@ -67,7 +69,7 @@ public class WaitingStockHelper {
         }
     }
 
-    public static boolean post(Player player, ItemStack[] itemStacks){
+    public static boolean post(@NotNull Player player, @NotNull ItemStack[] itemStacks){
         UUID uuid = player.getUniqueId();
 
         ArrayList<Map<String, Object>> itemInfoList = new ArrayList<>();
@@ -75,16 +77,12 @@ public class WaitingStockHelper {
             DatabaseItem waitingStock = ItemStackHelper.encodeItemStack(itemStack);
 
             if (waitingStock != null) {
-                String itemDisplayName = waitingStock.itemDisplayName;
-                String itemMaterial = waitingStock.itemMaterial;
-                String itemEnchantmentsJson = waitingStock.itemEnchantments;
-                int amount = waitingStock.amount;
-
                 Map<String, Object> itemInfo = new HashMap<>();
-                itemInfo.put("item_display_name", itemDisplayName);
-                itemInfo.put("item_material", itemMaterial);
-                itemInfo.put("item_enchantments", itemEnchantmentsJson);
-                itemInfo.put("amount", amount);
+                itemInfo.put("item_display_name", waitingStock.itemDisplayName);
+                itemInfo.put("item_material", waitingStock.itemMaterial);
+                itemInfo.put("item_enchantments", waitingStock.itemEnchantments);
+                itemInfo.put("item_damage", waitingStock.itemDamage);
+                itemInfo.put("amount", waitingStock.amount);
 
                 itemInfoList.add(itemInfo);
             }else{

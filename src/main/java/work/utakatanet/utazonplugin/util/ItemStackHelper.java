@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 import work.utakatanet.utazonplugin.data.DatabaseItem;
@@ -36,7 +37,10 @@ public class ItemStackHelper {
             int itemAmount = itemStack.getAmount();
             String itemMaterial = itemStack.getType().getKey().getKey();
 
-            return new DatabaseItem(itemDisplayName, itemMaterial, itemEnchantmentsJson, itemAmount);
+            Damageable damageable = (Damageable) itemStack.getItemMeta();
+            int itemDamage = damageable.getDamage();
+
+            return new DatabaseItem(itemDisplayName, itemMaterial, itemEnchantmentsJson, itemDamage, itemAmount);
         } else {
             return null;
         }
@@ -48,6 +52,7 @@ public class ItemStackHelper {
         String itemDisplayName = productItem.itemDisplayName;
         String itemMaterialString = productItem.itemMaterial;
         String itemEnchantmentsString = productItem.itemEnchantments;
+        int itemDamage = productItem.itemDamage;
         int amount = productItem.amount;
 
 
@@ -78,6 +83,13 @@ public class ItemStackHelper {
         ItemStack itemStack = new ItemStack(itemMaterial, amount);
         itemStack.addEnchantments(itemEnchantments);
 
+        // ダメージ
+        Damageable damageable = (Damageable) itemStack.getItemMeta();
+        if (damageable != null) {
+            damageable.setDamage(itemDamage);
+            itemStack.setItemMeta(damageable);
+        }
+
         // アイテムに名前をつける
         ItemMeta itemMeta = itemStack.getItemMeta();
         if (itemMeta != null && !itemDisplayName.isEmpty()) {
@@ -94,6 +106,7 @@ public class ItemStackHelper {
         String itemDisplayName = waitingStock.itemDisplayName;
         String itemMaterialString = waitingStock.itemMaterial;
         String itemEnchantmentsString = waitingStock.itemEnchantments;
+        int itemDamage = waitingStock.itemDamage;
         int amount = waitingStock.amount;
 
 
@@ -123,6 +136,13 @@ public class ItemStackHelper {
         // アイテムにエンチャントを付与
         ItemStack itemStack = new ItemStack(itemMaterial, amount);
         itemStack.addEnchantments(itemEnchantments);
+
+        // ダメージ
+        Damageable damageable = (Damageable) itemStack.getItemMeta();
+        if (damageable != null) {
+            damageable.setDamage(itemDamage);
+            itemStack.setItemMeta(damageable);
+        }
 
         // アイテムに名前をつける
         ItemMeta itemMeta = itemStack.getItemMeta();

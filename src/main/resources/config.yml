@@ -10,6 +10,7 @@ socket:
   port: "44444"
 
 web:
-  # Webと同じにしてください
-  host: "http://localhost:8000"
-  pass: "password"
+  host: "http://localhost:8000" # 接続用のリンク
+  pass: "password" # Web側のパスワード
+
+  embed: "http://localhost:8000" # 注文書に埋め込む用のリンク

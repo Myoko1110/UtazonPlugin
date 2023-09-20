@@ -115,7 +115,7 @@ public class detectOrder extends BukkitRunnable {
                     }
 
                     BaseComponent[] pageComponentsFormat = pageComponents.create();
-                    pageComponentsFormat[1].setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, UtazonPlugin.webHost));
+                    pageComponentsFormat[1].setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, UtazonPlugin.webEmbedHost));
 
 
                     bookMeta.spigot().addPage(pageComponentsFormat);
@@ -189,7 +189,7 @@ public class detectOrder extends BukkitRunnable {
             ItemMeta itemMeta = shulker.getItemMeta();
 
             if (itemMeta != null) {
-                itemMeta.setDisplayName("Utazonからのお届け物");
+                itemMeta.setDisplayName(ChatColor.AQUA + "Utazonからのお届け物");
 
                 ArrayList<String> lores = new ArrayList<>();
                 lores.add("注文番号: " + i.orderID);

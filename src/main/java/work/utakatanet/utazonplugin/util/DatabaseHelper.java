@@ -240,8 +240,7 @@ public class DatabaseHelper {
                 ResultSet rs = pstmt.executeQuery();
 
                 if (rs.next()) {
-                    String value = rs.getString("value");
-                    return value;
+                    return rs.getString("value");
 
                 }else{
                     return null;
@@ -318,6 +317,12 @@ public class DatabaseHelper {
             pstmt.executeUpdate();
 
             pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_itemstack` (item_id BIGINT UNIQUE, item_display_name VARCHAR(64), item_material VARCHAR(64), item_enchantments JSON, item_damage INT, stack_size INT, stock BIGINT)");
+            pstmt.executeUpdate();
+
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_item` (sale_id INT AUTO_INCREMENT UNIQUE, item_id BIGINT UNIQUE, item_name VARCHAR(256), price DOUBLE, image JSON, review JSON, kind JSON, category VARCHAR(64), purchases_number BIGINT, mc_uuid VARCHAR(36), search_keyword JSON, FULLTEXT (item_name) WITH PARSER ngram) DEFAULT CHARSET=utf8 ENGINE=InnoDB COLLATE=utf8_unicode_ci");
+            pstmt.executeUpdate();
+
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_waitingstock` (mc_uuid VARCHAR(36), value JSON, updated_time DATETIME)");
             pstmt.executeUpdate();
 
         } catch (SQLException e) {

@@ -3,7 +3,6 @@ package work.utakatanet.utazonplugin.util;
 import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
 import com.google.gson.Gson;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.inventory.ItemStack;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 
 import java.io.IOException;
@@ -11,8 +10,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 public class SocketServer implements Runnable {
@@ -64,12 +61,7 @@ public class SocketServer implements Runnable {
 
     private void handleClient(Socket clientSocket) throws IOException {
 
-        InputStream inputStream = null;
-        OutputStream outputStream = null;
-
-        try {
-            inputStream = clientSocket.getInputStream();
-            outputStream = clientSocket.getOutputStream();
+        try (InputStream inputStream = clientSocket.getInputStream(); OutputStream outputStream = clientSocket.getOutputStream()) {
 
             byte[] buffer = new byte[1024];
             int bytesRead;
@@ -81,13 +73,13 @@ public class SocketServer implements Runnable {
 
                 // UUID取得
                 UUID uuid = null;
-                try{
+                try {
                     uuid = UUID.fromString(receivedJson[1]);
-                } catch (IllegalArgumentException e){
+                } catch (IllegalArgumentException e) {
                     outputStream.write("Invalid UUID".getBytes());
                     outputStream.flush();
                 }
-                if (receivedJson[0].equalsIgnoreCase("getBalance")){
+                if (receivedJson[0].equalsIgnoreCase("getBalance") && uuid != null) {
                     // Balance取得
                     double PlayerBalance = ecoApi.getBalance(uuid);
 
@@ -96,26 +88,19 @@ public class SocketServer implements Runnable {
                     outputStream.write(responseData.getBytes());
                     outputStream.flush();
 
-                }else if ((receivedJson[0].equalsIgnoreCase("withdrawPlayer"))){
+                } else if ((receivedJson[0].equalsIgnoreCase("withdrawPlayer"))) {
                     UUID finalUUID = uuid;
                     plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                        ecoApi.withdrawPlayer(finalUUID, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』で購入", receivedJson[3]);
+                        ecoApi.withdrawPlayer(finalUUID, Double.parseDouble(receivedJson[2]), receivedJson[3], receivedJson[4]);
                         return null;
                     });
                     outputStream.write("Success".getBytes());
                     outputStream.flush();
-                }else if ((receivedJson[0].equalsIgnoreCase("depositRevenues"))){
+
+                } else if ((receivedJson[0].equalsIgnoreCase("depositPlayer"))) {
                     UUID finalUUID = uuid;
                     plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                        ecoApi.depositPlayer(finalUUID, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』からの売上入金", receivedJson[3]);
-                        return null;
-                    });
-                    outputStream.write("Success".getBytes());
-                    outputStream.flush();
-                }else if ((receivedJson[0].equalsIgnoreCase("depositPlayer"))){
-                    UUID finalUUID = uuid;
-                    plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                        ecoApi.depositPlayer(finalUUID, Double.parseDouble(receivedJson[2]), "ウェブショップ『Utazon』からのキャンセルに伴う返金", receivedJson[3]);
+                        ecoApi.depositPlayer(finalUUID, Double.parseDouble(receivedJson[2]), receivedJson[3], receivedJson[4]);
                         return null;
                     });
                     outputStream.write("Success".getBytes());
@@ -123,15 +108,9 @@ public class SocketServer implements Runnable {
                 }
             }
 
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (outputStream != null) {
-                outputStream.close();
-            }
             if (clientSocket != null) {
                 clientSocket.close();
             }

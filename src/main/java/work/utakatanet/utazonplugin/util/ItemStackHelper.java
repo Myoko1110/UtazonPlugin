@@ -30,14 +30,20 @@ public class ItemStackHelper {
                 String enchantmentKey = enchantment.getKey().getKey();
                 itemEnchantments.put(enchantmentKey, enchantmentLevel);
             }
-            itemEnchantmentsJson = gson.toJson(itemEnchantments, new TypeToken<Map<Enchantment, Integer>>(){}.getType());
+            itemEnchantmentsJson = gson.toJson(itemEnchantments, new TypeToken<Map<Enchantment, Integer>>() {
+            }.getType());
+
+            ItemMeta itemMeta = itemStack.getItemMeta();
 
             // アイテム名取得
-            String itemDisplayName = itemStack.getItemMeta().getDisplayName();
+            String itemDisplayName = null;
+            if (itemMeta != null) {
+                itemDisplayName = itemMeta.getDisplayName();
+            }
             int itemAmount = itemStack.getAmount();
             String itemMaterial = itemStack.getType().getKey().getKey();
 
-            Damageable damageable = (Damageable) itemStack.getItemMeta();
+            Damageable damageable = (Damageable) itemMeta;
             int itemDamage = damageable.getDamage();
 
             return new DatabaseItem(itemDisplayName, itemMaterial, itemEnchantmentsJson, itemDamage, itemAmount);
@@ -65,7 +71,8 @@ public class ItemStackHelper {
         }
 
         // エンチャント取得
-        Map<String, Integer> itemEnchantmentsJson = gson.fromJson(itemEnchantmentsString, new TypeToken<Map<String, Integer>>(){}.getType());
+        Map<String, Integer> itemEnchantmentsJson = gson.fromJson(itemEnchantmentsString, new TypeToken<Map<String, Integer>>() {
+        }.getType());
         Map<Enchantment, Integer> itemEnchantments = new HashMap<>();
         for (String enchantmentString : itemEnchantmentsJson.keySet()) {
             NamespacedKey itemEnchantmentKey = NamespacedKey.minecraft(enchantmentString);
@@ -119,7 +126,8 @@ public class ItemStackHelper {
         }
 
         // エンチャント取得
-        Map<String, Integer> itemEnchantmentsJson = gson.fromJson(itemEnchantmentsString, new TypeToken<Map<String, Integer>>(){}.getType());
+        Map<String, Integer> itemEnchantmentsJson = gson.fromJson(itemEnchantmentsString, new TypeToken<Map<String, Integer>>() {
+        }.getType());
         Map<Enchantment, Integer> itemEnchantments = new HashMap<>();
         for (String enchantmentString : itemEnchantmentsJson.keySet()) {
             NamespacedKey itemEnchantmentKey = NamespacedKey.minecraft(enchantmentString);

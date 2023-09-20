@@ -20,6 +20,7 @@ public final class UtazonPlugin extends JavaPlugin {
 
     public static String webHost;
     public static String webPass;
+    public static String webEmbedHost;
 
     @Override
     public void onEnable() {
@@ -31,6 +32,7 @@ public final class UtazonPlugin extends JavaPlugin {
 
         webHost = getConfig().getString("web.host");
         webPass = getConfig().getString("web.pass");
+        webEmbedHost = getConfig().getString("web.embed");
 
         socketServer = new SocketServer();
         socketServer.start();

@@ -1,5 +1,6 @@
 package work.utakatanet.utazonplugin.listener;
 
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
@@ -18,10 +19,10 @@ public class EventListener implements Listener {
 
     // GUIを閉じた時
     @EventHandler
-    public void onInventoryClose(InventoryCloseEvent e){
+    public void onInventoryClose(InventoryCloseEvent e) {
         Inventory inv = e.getInventory();
 
-        if (inv.getHolder() instanceof Block || !e.getView().getTitle().equals("待機ストック")){
+        if (inv.getHolder() instanceof Block || !e.getView().getTitle().equals("待機ストック")) {
             return;
         }
 
@@ -33,7 +34,7 @@ public class EventListener implements Listener {
 
     // シュルカーボックスを置いた時
     @EventHandler
-    public void onBlockPlace(BlockPlaceEvent e){
+    public void onBlockPlace(BlockPlaceEvent e) {
         Block b = e.getBlock();
         Block bp = e.getBlockPlaced();
         Player p = e.getPlayer();
@@ -42,7 +43,7 @@ public class EventListener implements Listener {
         if (bm == null) return;
         if (bm.getLore() == null) return;
 
-        if (bm.getDisplayName().equals("Utazonからのお届け物") && bm.getLore().get(0).startsWith("注文番号: ")) {
+        if (bm.getDisplayName().equals(ChatColor.AQUA + "Utazonからのお届け物") && bm.getLore().get(0).startsWith("注文番号: ")) {
             if (bp.getType() == Material.BROWN_SHULKER_BOX) {
                 ShulkerBox shulkerBox = (ShulkerBox) bp.getState();
                 Inventory shulkerInventory = shulkerBox.getInventory();
@@ -57,7 +58,7 @@ public class EventListener implements Listener {
                 }
 
                 if (hasItems) {
-                    for (ItemStack item : contents){
+                    for (ItemStack item : contents) {
                         if (item == null) continue;
                         b.getWorld().dropItemNaturally(b.getLocation(), item);
                     }

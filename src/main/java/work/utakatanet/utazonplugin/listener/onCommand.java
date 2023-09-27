@@ -25,7 +25,7 @@ public class onCommand implements CommandExecutor, TabCompleter {
 
         if (command.getName().equalsIgnoreCase("utazon")) {
             if (args.length == 0){
-                sender.sendMessage(ChatColor.RED + "[UtazonPlugin] 引数を入力してください。");
+                sender.sendMessage(ChatColor.RED + "[UtazonPlugin] 引数を入力してください");
                 return true;
             }
             switch (args[0]) {
@@ -66,7 +66,7 @@ public class onCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         if (args.length != 2){
-            sender.sendMessage(ChatColor.RED + "[UtazonPlugin] 引数が不足しています: /utazon socket <mode>");
+            sender.sendMessage(ChatColor.RED + "[UtazonPlugin] 引数が不足しています: /utazon socket [start|stop|restart]");
             return true;
         }
         switch (args[1]) {
@@ -91,7 +91,7 @@ public class onCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             default -> {
-                sender.sendMessage(ChatColor.RED + "[UtazonPlugin] 引数が不明です: /utazon socket <mode>");
+                sender.sendMessage(ChatColor.RED + "[UtazonPlugin] 引数が不明です: /utazon socket [start|stop|restart]");
                 return true;
             }
         }

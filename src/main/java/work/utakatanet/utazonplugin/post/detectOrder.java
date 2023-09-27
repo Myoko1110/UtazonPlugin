@@ -16,12 +16,15 @@ import org.jetbrains.annotations.NotNull;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 import work.utakatanet.utazonplugin.data.OrderList;
 import work.utakatanet.utazonplugin.util.DatabaseHelper;
+import work.utakatanet.utazonplugin.util.MailboxHelper;
 import work.utakatanet.utazonplugin.util.ProductHelper;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
@@ -71,8 +74,19 @@ public class detectOrder extends BukkitRunnable {
                 if (!breakOccur) {
                     plugin.getLogger().warning(player.getName() + "のポストが見つかりませんでした");
                     try {
-                        HttpURLConnection connection = getHttpConnection("/post/mailbox_notfound", player, i.orderID);
-                        connection.getResponseCode();
+                        HttpURLConnection connection = getHttpConnection("/post/mailbox_notfound");
+
+                        OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8);
+                        out.write(String.format("uuid=%s&orderid=%s", player.getUniqueId(), i.orderID));
+                        out.flush();
+                        out.close();
+
+                        connection.connect();
+                        int status = connection.getResponseCode();
+
+                        if (status != HttpURLConnection.HTTP_OK) {
+                            plugin.getLogger().warning("WebのUtazonに接続できませんでした");
+                        }
 
                         DatabaseHelper.errorOrder(i.orderID, "MailboxNotFound");
 
@@ -106,7 +120,7 @@ public class detectOrder extends BukkitRunnable {
 
                     for (int[] item : orderItem) {
                         int itemID = item[0];
-                        ArrayList<String> infoList = DatabaseHelper.geItemInfo(itemID);
+                        ArrayList<String> infoList = DatabaseHelper.getItemInfo(itemID);
 
                         if (infoList != null){
                             String itemFormat = getitemList(item, infoList);
@@ -138,12 +152,23 @@ public class detectOrder extends BukkitRunnable {
                 ArrayList<ItemStack> shulkerList = getShulkerList(i, itemList);
 
 
-                boolean post = postItem(chestLocation, shulkerList);
+                boolean post = MailboxHelper.postItem(chestLocation, shulkerList);
                 if (post) {
                     DatabaseHelper.completeOrder(i.orderID);
                     try {
-                        HttpURLConnection connection = getHttpConnection("/post/order_complete", player, i.orderID);
-                        connection.getResponseCode();
+                        HttpURLConnection connection = getHttpConnection("/post/order_complete");
+
+                        OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8);
+                        out.write(String.format("uuid=%s&orderid=%s", player.getUniqueId(), i.orderID));
+                        out.flush();
+                        out.close();
+
+                        connection.connect();
+                        int status = connection.getResponseCode();
+
+                        if (status != HttpURLConnection.HTTP_OK){
+                            plugin.getLogger().warning("WebのUtazonに接続できませんでした");
+                        }
 
                     }catch (ConnectException e){
                         plugin.getLogger().warning("WebのUtazonに接続できませんでした");
@@ -155,8 +180,19 @@ public class detectOrder extends BukkitRunnable {
                     plugin.getLogger().info(player.getName() + "のポストにアイテムを追加するスペースがありませんでした");
 
                     try {
-                        HttpURLConnection connection = getHttpConnection("/post/mailbox_full", player, i.orderID);
-                        connection.getResponseCode();
+                        HttpURLConnection connection = getHttpConnection("/post/mailbox_full");
+
+                        OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8);
+                        out.write(String.format("uuid=%s&orderid=%s", player.getUniqueId(), i.orderID));
+                        out.flush();
+                        out.close();
+
+                        connection.connect();
+                        int status = connection.getResponseCode();
+
+                        if (status != HttpURLConnection.HTTP_OK){
+                            plugin.getLogger().warning("WebのUtazonに接続できませんでした");
+                        }
 
                         DatabaseHelper.errorOrder(i.orderID, "MailboxFull");
 
@@ -232,68 +268,13 @@ public class detectOrder extends BukkitRunnable {
     }
 
     @NotNull
-    private static HttpURLConnection getHttpConnection(String path, OfflinePlayer player, String orderID) throws IOException {
+    public static HttpURLConnection getHttpConnection(String path) throws IOException {
         URL url = new URL(new URL(UtazonPlugin.webHost), path);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setDoOutput(true);
+        connection.setInstanceFollowRedirects(false);
         connection.setRequestMethod("POST");
         connection.setRequestProperty("pass", UtazonPlugin.webPass);
-        connection.setRequestProperty("mcuuid", player.getUniqueId().toString());
-        connection.setRequestProperty("orderid", orderID);
         return connection;
-    }
-
-    public boolean postItem(Location location, ArrayList<ItemStack> itemStack) {
-        try {
-            BlockState b = location.getBlock().getState();
-
-            int emptySlots = 0;
-
-            if (b instanceof Chest chest) {
-                for (ItemStack item : chest.getInventory().getContents()) {
-                    if (item == null) {
-                        emptySlots++;
-                    }
-                }
-                if (emptySlots < itemStack.size()) {
-                    return false;
-                }
-
-                for (ItemStack i : itemStack) {
-                    chest.getInventory().addItem(i);
-                }
-
-            } else if (b instanceof ShulkerBox shulkerBox) {
-                for (ItemStack item : shulkerBox.getInventory().getContents()) {
-                    if (item == null) {
-                        emptySlots++;
-                    }
-                }
-                if (emptySlots < itemStack.size()) {
-                    return false;
-                }
-
-                for (ItemStack i : itemStack) {
-                    shulkerBox.getInventory().addItem(i);
-                }
-
-            } else if (b instanceof Hopper hopper) {
-                for (ItemStack item : hopper.getInventory().getContents()) {
-                    if (item == null) {
-                        emptySlots++;
-                    }
-                }
-                if (emptySlots < itemStack.size()) {
-                    return false;
-                }
-
-                for (ItemStack i : itemStack) {
-                    hopper.getInventory().addItem(i);
-                }
-            }
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
     }
 }

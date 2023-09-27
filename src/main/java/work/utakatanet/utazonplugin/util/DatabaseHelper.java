@@ -5,6 +5,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 import work.utakatanet.utazonplugin.data.ProductItem;
 import work.utakatanet.utazonplugin.data.OrderList;
+import work.utakatanet.utazonplugin.data.ReturnStockList;
 
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
@@ -49,8 +50,8 @@ public class DatabaseHelper {
             while (rs.next()) {
                 UUID uuid = UUID.fromString(rs.getString("mc_uuid"));
                 int[][] orderItem = gson.fromJson(rs.getString("order_item"), int[][].class);
-                LocalDateTime deliveryTime = LocalDateTime.parse(rs.getString("delivery_time"), formatter);
-                LocalDateTime orderTime = LocalDateTime.parse(rs.getString("order_time"), formatter);
+                LocalDateTime deliveryTime = LocalDateTime.parse(rs.getString("delivery_at"), formatter);
+                LocalDateTime orderTime = LocalDateTime.parse(rs.getString("order_at"), formatter);
                 String orderID = rs.getString("order_id");
                 double amount = rs.getDouble("amount");
                 int usedPoint = rs.getInt("used_point");
@@ -205,7 +206,7 @@ public class DatabaseHelper {
                     pass
             );
 
-            String sql = "INSERT INTO utazon_waitingstock (mc_uuid, value, updated_date) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value), updated_date=VALUES(updated_date)";
+            String sql = "INSERT INTO utazon_waitingstock (mc_uuid, value, updated_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value), updated_at=VALUES(updated_at)";
             try (PreparedStatement pstmt = cnx.prepareStatement(sql)){
                 LocalDateTime now = LocalDateTime.now();
 
@@ -256,7 +257,7 @@ public class DatabaseHelper {
         return null;
     }
 
-    public static ArrayList<String> geItemInfo(int itemID) {
+    public static ArrayList<String> getItemInfo(int itemID) {
         try {
             Connection cnx = DriverManager.getConnection(
                     String.format("jdbc:mysql://%s:%s/%s", host, port, db),
@@ -272,10 +273,12 @@ public class DatabaseHelper {
                 if (rs.next()) {
                     String itemName = rs.getString("item_name");
                     String itemPrice = rs.getString("price");
+                    String uuid = rs.getString("mc_uuid");
 
                     ArrayList<String> infoList = new ArrayList<>();
                     infoList.add(itemName);
                     infoList.add(itemPrice);
+                    infoList.add(uuid);
 
                     return infoList;
                 }else{
@@ -290,6 +293,108 @@ public class DatabaseHelper {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static ArrayList<ReturnStockList> getReturnStock() {
+        Connection cnx = null;
+        PreparedStatement pstmt;
+        ResultSet rs = null;
+
+        ArrayList<ReturnStockList> orderList = new ArrayList<>();
+        try {
+            cnx = DriverManager.getConnection(
+                    String.format("jdbc:mysql://%s:%s/%s", host, port, db),
+                    user,
+                    pass
+            );
+            pstmt = cnx.prepareStatement("SELECT * FROM utazon_returnstock WHERE status=true");
+
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                UUID uuid = UUID.fromString(rs.getString("mc_uuid"));
+                int itemID = rs.getInt("item_id");
+                int amount = rs.getInt("amount");
+                LocalDateTime deliveryAt = LocalDateTime.parse(rs.getString("delivery_at"), formatter);
+                boolean status = rs.getBoolean("status");
+                String error = rs.getString("error");
+
+                ReturnStockList orderListChild = new ReturnStockList(id, uuid, itemID, amount, deliveryAt, status, error);
+                orderList.add(orderListChild);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (cnx != null) {
+                try {
+                    cnx.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return orderList;
+
+    }
+
+    public static void completeReturnStock(int id) {
+        try {
+            Connection cnx = DriverManager.getConnection(
+                    String.format("jdbc:mysql://%s:%s/%s", host, port, db),
+                    user,
+                    pass
+            );
+
+            String sql = "UPDATE utazon_returnstock SET status=?, error=null WHERE id=?";
+            try (PreparedStatement pstmt = cnx.prepareStatement(sql)){
+                pstmt.setBoolean(1, false);
+                pstmt.setInt(2, id);
+
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void errorReturnStock(int id, String error) {
+        LocalDateTime hourago = LocalDateTime.now().plusHours(1);
+
+        try {
+            Connection cnx = DriverManager.getConnection(
+                    String.format("jdbc:mysql://%s:%s/%s", host, port, db),
+                    user,
+                    pass
+            );
+
+            String sql = "UPDATE utazon_returnstock SET error=?, delivery_at=? WHERE id=?";
+            try (PreparedStatement pstmt = cnx.prepareStatement(sql)){
+                pstmt.setString(1, error);
+                pstmt.setTimestamp(2, Timestamp.valueOf(hourago));
+                pstmt.setInt(3, id);
+
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -313,16 +418,16 @@ public class DatabaseHelper {
                     user,
                     pass
             );
-            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_order` (mc_uuid VARCHAR(36), order_item JSON, delivery_time DATETIME, order_time DATETIME, order_id VARCHAR(18) UNIQUE, error VARCHAR(64))");
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_order` (mc_uuid VARCHAR(36), order_item JSON, delivery_at DATETIME, order_at DATETIME, order_id VARCHAR(18) UNIQUE, error VARCHAR(64))");
             pstmt.executeUpdate();
 
             pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_itemstack` (item_id BIGINT UNIQUE, item_display_name VARCHAR(64), item_material VARCHAR(64), item_enchantments JSON, item_damage INT, stack_size INT, stock BIGINT)");
             pstmt.executeUpdate();
 
-            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_item` (sale_id INT AUTO_INCREMENT UNIQUE, item_id BIGINT UNIQUE, item_name VARCHAR(256), price DOUBLE, image JSON, review JSON, kind JSON, category VARCHAR(64), purchases_number BIGINT, mc_uuid VARCHAR(36), search_keyword JSON, FULLTEXT (item_name) WITH PARSER ngram) DEFAULT CHARSET=utf8 ENGINE=InnoDB COLLATE=utf8_unicode_ci");
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_item` (sale_id INT AUTO_INCREMENT UNIQUE, item_id BIGINT UNIQUE, item_name VARCHAR(256), price DOUBLE, image JSON, review JSON, kind JSON, category VARCHAR(64), purchases_number BIGINT, mc_uuid VARCHAR(36), search_keyword JSON, created_at DATETIME, FULLTEXT (item_name) WITH PARSER ngram) DEFAULT CHARSET=utf8 ENGINE=InnoDB COLLATE=utf8_unicode_ci");
             pstmt.executeUpdate();
 
-            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_waitingstock` (mc_uuid VARCHAR(36), value JSON, updated_time DATETIME)");
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_waitingstock` (mc_uuid VARCHAR(36), value JSON, updated_at DATETIME)");
             pstmt.executeUpdate();
 
         } catch (SQLException e) {

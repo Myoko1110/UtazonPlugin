@@ -41,9 +41,10 @@ public class EventListener implements Listener {
 
         ItemMeta bm = p.getInventory().getItemInMainHand().getItemMeta();
         if (bm == null) return;
-        if (bm.getLore() == null) return;
 
-        if (bm.getDisplayName().equals(ChatColor.AQUA + "Utazonからのお届け物") && bm.getLore().get(0).startsWith("注文番号: ")) {
+        if (bm.getDisplayName().equals(ChatColor.AQUA + "Utazonからのお届け物") && bm.getLore() != null && bm.getLore().get(0).startsWith("注文番号: ")
+            || bm.getDisplayName().startsWith(ChatColor.AQUA + "Utazonからの在庫返却") || bm.getDisplayName().startsWith(ChatColor.DARK_PURPLE + "Utazonからの在庫返却"))
+        {
             if (bp.getType() == Material.BROWN_SHULKER_BOX) {
                 ShulkerBox shulkerBox = (ShulkerBox) bp.getState();
                 Inventory shulkerInventory = shulkerBox.getInventory();

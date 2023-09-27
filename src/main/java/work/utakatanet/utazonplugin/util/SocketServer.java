@@ -2,15 +2,28 @@ package work.utakatanet.utazonplugin.util;
 
 import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
 import com.google.gson.Gson;
+import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.ShulkerBox;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import work.utakatanet.utazonplugin.UtazonPlugin;
+import work.utakatanet.utazonplugin.data.ProductItem;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.UUID;
+
+import static work.utakatanet.utazonplugin.post.detectOrder.allowBlocks;
 
 public class SocketServer implements Runnable {
 
@@ -22,7 +35,7 @@ public class SocketServer implements Runnable {
     public boolean isRunning = false;
     private int port;
 
-    public SocketServer(){
+    public SocketServer() {
         loadSettings();
     }
 
@@ -71,15 +84,16 @@ public class SocketServer implements Runnable {
 
                 String[] receivedJson = gson.fromJson(receivedData, String[].class);
 
-                // UUID取得
-                UUID uuid = null;
-                try {
-                    uuid = UUID.fromString(receivedJson[1]);
-                } catch (IllegalArgumentException e) {
-                    outputStream.write("Invalid UUID".getBytes());
-                    outputStream.flush();
-                }
-                if (receivedJson[0].equalsIgnoreCase("getBalance") && uuid != null) {
+
+                if (receivedJson[0].equalsIgnoreCase("getBalance")) {
+                    // UUID取得
+                    UUID uuid = null;
+                    try {
+                        uuid = UUID.fromString(receivedJson[1]);
+                    } catch (IllegalArgumentException e) {
+                        outputStream.write("Invalid UUID".getBytes());
+                        outputStream.flush();
+                    }
                     // Balance取得
                     double PlayerBalance = ecoApi.getBalance(uuid);
 
@@ -88,7 +102,16 @@ public class SocketServer implements Runnable {
                     outputStream.write(responseData.getBytes());
                     outputStream.flush();
 
-                } else if ((receivedJson[0].equalsIgnoreCase("withdrawPlayer"))) {
+                } else if (receivedJson[0].equalsIgnoreCase("withdrawPlayer")) {
+                    // UUID取得
+                    UUID uuid = null;
+                    try {
+                        uuid = UUID.fromString(receivedJson[1]);
+                    } catch (IllegalArgumentException e) {
+                        outputStream.write("Invalid UUID".getBytes());
+                        outputStream.flush();
+                    }
+
                     UUID finalUUID = uuid;
                     plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
                         ecoApi.withdrawPlayer(finalUUID, Double.parseDouble(receivedJson[2]), receivedJson[3], receivedJson[4]);
@@ -97,7 +120,16 @@ public class SocketServer implements Runnable {
                     outputStream.write("Success".getBytes());
                     outputStream.flush();
 
-                } else if ((receivedJson[0].equalsIgnoreCase("depositPlayer"))) {
+                } else if (receivedJson[0].equalsIgnoreCase("depositPlayer")) {
+                    // UUID取得
+                    UUID uuid = null;
+                    try {
+                        uuid = UUID.fromString(receivedJson[1]);
+                    } catch (IllegalArgumentException e) {
+                        outputStream.write("Invalid UUID".getBytes());
+                        outputStream.flush();
+                    }
+
                     UUID finalUUID = uuid;
                     plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
                         ecoApi.depositPlayer(finalUUID, Double.parseDouble(receivedJson[2]), receivedJson[3], receivedJson[4]);
@@ -117,7 +149,7 @@ public class SocketServer implements Runnable {
         }
     }
 
-    public void loadSettings(){
+    public void loadSettings() {
         FileConfiguration section = plugin.getConfig();
         this.port = section.getInt("socket.port");
     }

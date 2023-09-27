@@ -7,6 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import work.utakatanet.utazonplugin.listener.EventListener;
 import work.utakatanet.utazonplugin.listener.onCommand;
 import work.utakatanet.utazonplugin.post.detectOrder;
+import work.utakatanet.utazonplugin.post.detectReturn;
 import work.utakatanet.utazonplugin.util.DatabaseHelper;
 import work.utakatanet.utazonplugin.util.SocketServer;
 
@@ -42,8 +43,8 @@ public final class UtazonPlugin extends JavaPlugin {
 
         new DatabaseHelper().init();
 
-        detectOrder scheduler = new detectOrder();
-        scheduler.runTaskTimer(this, 0, 20*60);
+        new detectOrder().runTaskTimer(this, 0, 20*60);
+        new detectReturn().runTaskTimer(this, 0, 20*60);
 
     }
 

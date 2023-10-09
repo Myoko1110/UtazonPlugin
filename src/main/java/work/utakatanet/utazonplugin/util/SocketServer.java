@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -54,7 +55,10 @@ public class SocketServer implements Runnable {
                 Socket clientSocket = serverSocket.accept();
                 handleClient(clientSocket);
             }
-
+        } catch (SocketException e){
+            if (!e.getMessage().contains("Socket closed")){
+                e.printStackTrace();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -69,7 +73,7 @@ public class SocketServer implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        plugin.getLogger().info("Socketサーバーを停止しました");
+        plugin.getLogger().info("Socketサーバーが停止されました");
     }
 
     private void handleClient(Socket clientSocket) throws IOException {

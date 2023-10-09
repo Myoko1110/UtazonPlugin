@@ -1,6 +1,7 @@
 package work.utakatanet.utazonplugin.util;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.bukkit.configuration.file.FileConfiguration;
 import work.utakatanet.utazonplugin.UtazonPlugin;
 import work.utakatanet.utazonplugin.data.ProductItem;
@@ -44,14 +45,14 @@ public class DatabaseHelper {
                     user,
                     pass
             );
-            pstmt = cnx.prepareStatement("SELECT * FROM utazon_order WHERE status=true and canceled=false");
+            pstmt = cnx.prepareStatement("SELECT * FROM utazon_order WHERE status=TRUE AND canceled=FALSE");
 
             rs = pstmt.executeQuery();
             while (rs.next()) {
                 UUID uuid = UUID.fromString(rs.getString("mc_uuid"));
-                int[][] orderItem = gson.fromJson(rs.getString("order_item"), int[][].class);
-                LocalDateTime deliveryTime = LocalDateTime.parse(rs.getString("delivery_at"), formatter);
-                LocalDateTime orderTime = LocalDateTime.parse(rs.getString("order_at"), formatter);
+                Map<String, Integer> orderItem = gson.fromJson(rs.getString("order_item"), new TypeToken<Map<String, Integer>>(){}.getType());
+                LocalDateTime deliveryTime = LocalDateTime.parse(rs.getString("delivers_at"), formatter);
+                LocalDateTime orderTime = LocalDateTime.parse(rs.getString("ordered_at"), formatter);
                 String orderID = rs.getString("order_id");
                 double amount = rs.getDouble("amount");
                 int usedPoint = rs.getInt("used_point");
@@ -315,7 +316,7 @@ public class DatabaseHelper {
                 UUID uuid = UUID.fromString(rs.getString("mc_uuid"));
                 int itemID = rs.getInt("item_id");
                 int amount = rs.getInt("amount");
-                LocalDateTime deliveryAt = LocalDateTime.parse(rs.getString("delivery_at"), formatter);
+                LocalDateTime deliveryAt = LocalDateTime.parse(rs.getString("delivers_at"), formatter);
                 boolean status = rs.getBoolean("status");
                 String error = rs.getString("error");
 
@@ -380,7 +381,7 @@ public class DatabaseHelper {
                     pass
             );
 
-            String sql = "UPDATE utazon_returnstock SET error=?, delivery_at=? WHERE id=?";
+            String sql = "UPDATE utazon_returnstock SET error=?, deliverys_at=? WHERE id=?";
             try (PreparedStatement pstmt = cnx.prepareStatement(sql)){
                 pstmt.setString(1, error);
                 pstmt.setTimestamp(2, Timestamp.valueOf(hourago));
@@ -418,16 +419,19 @@ public class DatabaseHelper {
                     user,
                     pass
             );
-            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_order` (mc_uuid VARCHAR(36), order_item JSON, delivery_at DATETIME, order_at DATETIME, order_id VARCHAR(18) UNIQUE, error VARCHAR(64))");
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_order` (order_id VARCHAR(18) UNIQUE, mc_uuid VARCHAR(36), order_item JSON, delivers_at DATETIME, ordered_at DATETIME, amount DOUBLE, used_point INT, canceled BOOLEAN, error VARCHAR(36), status BOOLEAN)");
             pstmt.executeUpdate();
 
             pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_itemstack` (item_id BIGINT UNIQUE, item_display_name VARCHAR(64), item_material VARCHAR(64), item_enchantments JSON, item_damage INT, stack_size INT, stock BIGINT)");
             pstmt.executeUpdate();
 
-            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_item` (sale_id INT AUTO_INCREMENT UNIQUE, item_id BIGINT UNIQUE, item_name VARCHAR(256), price DOUBLE, image JSON, review JSON, kind JSON, category VARCHAR(64), purchases_number BIGINT, mc_uuid VARCHAR(36), search_keyword JSON, created_at DATETIME, FULLTEXT (item_name) WITH PARSER ngram) DEFAULT CHARSET=utf8 ENGINE=InnoDB COLLATE=utf8_unicode_ci");
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_item` (sale_id INT AUTO_INCREMENT UNIQUE, item_id BIGINT UNIQUE, item_name VARCHAR(256), price DOUBLE, image JSON, kind JSON, category VARCHAR(64), purchases_number BIGINT, mc_uuid VARCHAR(36), search_keyword JSON, created_at DATETIME, updated_at DATETIME, status BOOLEAN, FULLTEXT (item_name) WITH PARSER ngram) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci");
             pstmt.executeUpdate();
 
             pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_waitingstock` (mc_uuid VARCHAR(36), value JSON, updated_at DATETIME)");
+            pstmt.executeUpdate();
+
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_returnstock` (mc_uuid VARCHAR(36), item_id BIGINT, amount INT, created_at DATETIME, delivers_at DATETIME, status BOOLEAN, error VARCHAR(64))");
             pstmt.executeUpdate();
 
         } catch (SQLException e) {

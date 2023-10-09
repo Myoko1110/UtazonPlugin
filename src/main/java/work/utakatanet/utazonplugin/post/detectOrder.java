@@ -30,6 +30,7 @@ import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 public class detectOrder extends BukkitRunnable {
@@ -44,14 +45,14 @@ public class detectOrder extends BukkitRunnable {
 
         for (OrderList i : order) {
 
-            LocalDateTime deliveryTime = i.deliveryTime;
+            LocalDateTime deliveryTime = i.deliversAt;
             LocalDateTime now = LocalDateTime.now();
 
             if (deliveryTime.isBefore(now)) {
                 isExist = true;
 
                 UUID uuid = i.uuid;
-                int[][] orderItem = i.orderItem;
+                Map<String, Integer> orderItem = i.orderItem;
                 OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
 
@@ -74,7 +75,7 @@ public class detectOrder extends BukkitRunnable {
                 if (!breakOccur) {
                     plugin.getLogger().warning(player.getName() + "のポストが見つかりませんでした");
                     try {
-                        HttpURLConnection connection = getHttpConnection("/post/mailbox_notfound");
+                        HttpURLConnection connection = getHttpConnection("/post/mailbox_notfound/");
 
                         OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8);
                         out.write(String.format("uuid=%s&orderid=%s", player.getUniqueId(), i.orderID));
@@ -118,12 +119,12 @@ public class detectOrder extends BukkitRunnable {
                             .append("合計額：$" + numberFormat.format(i.amount) + "\n───────────");
 
 
-                    for (int[] item : orderItem) {
-                        int itemID = item[0];
+                    for (Map.Entry<String, Integer> entry : orderItem.entrySet()) {
+                        int itemID = Integer.parseInt(entry.getKey());
                         ArrayList<String> infoList = DatabaseHelper.getItemInfo(itemID);
 
                         if (infoList != null){
-                            String itemFormat = getitemList(item, infoList);
+                            String itemFormat = getitemList(entry.getValue(), infoList);
                             pageComponents.append(itemFormat);
                         }
                     }
@@ -139,9 +140,9 @@ public class detectOrder extends BukkitRunnable {
 
 
                 // アイテムを取得
-                for (int[] item : orderItem) {
-                    int itemID = item[0];
-                    int itemQty = item[1];
+                for (Map.Entry<String, Integer> entry : orderItem.entrySet()) {
+                    int itemID = Integer.parseInt(entry.getKey());
+                    int itemQty = entry.getValue();
 
                     // アイテム取得処理
                     ItemStack itemStack = ProductHelper.getProductStack(itemID);
@@ -156,7 +157,7 @@ public class detectOrder extends BukkitRunnable {
                 if (post) {
                     DatabaseHelper.completeOrder(i.orderID);
                     try {
-                        HttpURLConnection connection = getHttpConnection("/post/order_complete");
+                        HttpURLConnection connection = getHttpConnection("/post/order_complete/");
 
                         OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8);
                         out.write(String.format("uuid=%s&orderid=%s", player.getUniqueId(), i.orderID));
@@ -180,7 +181,7 @@ public class detectOrder extends BukkitRunnable {
                     plugin.getLogger().info(player.getName() + "のポストにアイテムを追加するスペースがありませんでした");
 
                     try {
-                        HttpURLConnection connection = getHttpConnection("/post/mailbox_full");
+                        HttpURLConnection connection = getHttpConnection("/post/mailbox_full/");
 
                         OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8);
                         out.write(String.format("uuid=%s&orderid=%s", player.getUniqueId(), i.orderID));
@@ -254,15 +255,15 @@ public class detectOrder extends BukkitRunnable {
     }
 
     @NotNull
-    private static String getitemList(int[] item, ArrayList<String> infoList) {
+    private static String getitemList(int amount, ArrayList<String> infoList) {
         String itemName = infoList.get(0);
         String itemPrice = infoList.get(1);
 
         String itemFormat;
         if (infoList.get(0).length() > 11) {
-            itemFormat = "\n・" + itemName.substring(0, 10) + "…"  + "\n　$" + itemPrice  + " ×" + item[1];
+            itemFormat = "\n・" + itemName.substring(0, 10) + "…"  + "\n　$" + itemPrice  + " ×" + amount;
         } else {
-            itemFormat = "\n・" + itemName + "\n　$" + itemPrice  + " ×" + item[1];
+            itemFormat = "\n・" + itemName + "\n　$" + itemPrice  + " ×" + amount;
         }
         return itemFormat;
     }

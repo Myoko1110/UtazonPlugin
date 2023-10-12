@@ -8,22 +8,26 @@ public class OrderList {
 
     public UUID uuid;
     public Map<String, Integer> orderItem;
+    public LocalDateTime orderedAt;
+    public LocalDateTime shipsAt;
     public LocalDateTime deliversAt;
-    public LocalDateTime ordereAt;
     public String orderID;
     public double amount;
     public int usedPoint;
     public String error;
+    public boolean dmSent;
 
-    public OrderList(UUID uuid, Map<String, Integer> orderItem, LocalDateTime deliveryAt, LocalDateTime orderTime, String orderID, double amount, int usedPoint, String error) {
+    public OrderList(UUID uuid, Map<String, Integer> orderItem, LocalDateTime orderTime, LocalDateTime shipAt, LocalDateTime deliveryAt, String orderID, double amount, int usedPoint, String error, boolean dmSent) {
         this.uuid = uuid;
         this.orderItem = orderItem;
+        this.orderedAt = orderTime;
+        this.shipsAt = shipAt;
         this.deliversAt = deliveryAt;
-        this.ordereAt = orderTime;
         this.orderID = orderID;
         this.amount = amount;
         this.usedPoint = usedPoint;
         this.error = error;
+        this.dmSent = dmSent;
     }
 
 }

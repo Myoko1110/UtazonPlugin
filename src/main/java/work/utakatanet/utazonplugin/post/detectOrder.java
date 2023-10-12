@@ -45,16 +45,16 @@ public class detectOrder extends BukkitRunnable {
 
         for (OrderList i : order) {
 
-            LocalDateTime deliveryTime = i.deliversAt;
             LocalDateTime now = LocalDateTime.now();
 
-            if (deliveryTime.isBefore(now)) {
+            /* 配達時間になったら*/
+            if (i.deliversAt.isBefore(now)) {
                 isExist = true;
 
+                // 注文情報を取得
                 UUID uuid = i.uuid;
                 Map<String, Integer> orderItem = i.orderItem;
                 OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-
 
                 World world = Bukkit.getWorld("world");
                 if (world == null) {
@@ -100,6 +100,7 @@ public class detectOrder extends BukkitRunnable {
                 }
 
 
+                /* 納品書を作成 */
                 ArrayList<ItemStack> itemList = new ArrayList<>();
 
                 // 納品書を作成
@@ -139,7 +140,7 @@ public class detectOrder extends BukkitRunnable {
                 }
 
 
-                // アイテムを取得
+                /* 配達する商品をまとめる */
                 for (Map.Entry<String, Integer> entry : orderItem.entrySet()) {
                     int itemID = Integer.parseInt(entry.getKey());
                     int itemQty = entry.getValue();
@@ -152,7 +153,7 @@ public class detectOrder extends BukkitRunnable {
                 }
                 ArrayList<ItemStack> shulkerList = getShulkerList(i, itemList);
 
-
+                /* 配達 */
                 boolean post = MailboxHelper.postItem(chestLocation, shulkerList);
                 if (post) {
                     DatabaseHelper.completeOrder(i.orderID);
@@ -200,6 +201,33 @@ public class detectOrder extends BukkitRunnable {
                     }catch (ConnectException e){
                         plugin.getLogger().warning("WebのUtazonに接続できませんでした");
                     }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+
+            /* 発送時間になったら */
+            } else if (i.shipsAt.isBefore(now)){
+                if (!i.dmSent) {
+                    try {
+                        HttpURLConnection connection = getHttpConnection("/post/ship_complete/");
+
+                        OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8);
+                        out.write(String.format("uuid=%s&orderid=%s", i.uuid, i.orderID));
+                        out.flush();
+                        out.close();
+
+                        connection.connect();
+                        int status = connection.getResponseCode();
+
+                        if (status != HttpURLConnection.HTTP_OK) {
+                            plugin.getLogger().warning("WebのUtazonに接続できませんでした");
+                        }
+
+                        DatabaseHelper.completeDMSent(i.orderID);
+
+                    } catch (ConnectException e) {
+                        plugin.getLogger().warning("WebのUtazonに接続できませんでした");
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }

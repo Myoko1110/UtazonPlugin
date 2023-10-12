@@ -51,14 +51,16 @@ public class DatabaseHelper {
             while (rs.next()) {
                 UUID uuid = UUID.fromString(rs.getString("mc_uuid"));
                 Map<String, Integer> orderItem = gson.fromJson(rs.getString("order_item"), new TypeToken<Map<String, Integer>>(){}.getType());
-                LocalDateTime deliveryTime = LocalDateTime.parse(rs.getString("delivers_at"), formatter);
                 LocalDateTime orderTime = LocalDateTime.parse(rs.getString("ordered_at"), formatter);
+                LocalDateTime shipTime = LocalDateTime.parse(rs.getString("ships_at"), formatter);
+                LocalDateTime deliveryTime = LocalDateTime.parse(rs.getString("delivers_at"), formatter);
                 String orderID = rs.getString("order_id");
                 double amount = rs.getDouble("amount");
                 int usedPoint = rs.getInt("used_point");
                 String error = rs.getString("error");
+                boolean dmSent = rs.getBoolean("dm_sent");
 
-                OrderList orderListChild = new OrderList(uuid, orderItem, deliveryTime, orderTime, orderID, amount, usedPoint, error);
+                OrderList orderListChild = new OrderList(uuid, orderItem, orderTime, shipTime, deliveryTime, orderID, amount, usedPoint, error, dmSent);
                 orderList.add(orderListChild);
             }
 
@@ -103,6 +105,28 @@ public class DatabaseHelper {
                 e.printStackTrace();
             }
 
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void completeDMSent(String orderID) {
+        try {
+            Connection cnx = DriverManager.getConnection(
+                    String.format("jdbc:mysql://%s:%s/%s", host, port, db),
+                    user,
+                    pass
+            );
+
+            String sql = "UPDATE utazon_order SET dm_sent=TRUE WHERE order_id=?";
+            try (PreparedStatement pstmt = cnx.prepareStatement(sql)){
+                pstmt.setString(1, orderID);
+
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -419,7 +443,7 @@ public class DatabaseHelper {
                     user,
                     pass
             );
-            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_order` (order_id VARCHAR(18) UNIQUE, mc_uuid VARCHAR(36), order_item JSON, delivers_at DATETIME, ordered_at DATETIME, amount DOUBLE, used_point INT, canceled BOOLEAN, error VARCHAR(36), status BOOLEAN)");
+            pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_order` (order_id VARCHAR(18) UNIQUE, mc_uuid VARCHAR(36), order_item JSON, ordered_at DATETIME, ships_at DATETIME, delivers_at DATETIME, amount DOUBLE, used_point INT, canceled BOOLEAN, error VARCHAR(36), status BOOLEAN)");
             pstmt.executeUpdate();
 
             pstmt = cnx.prepareStatement("CREATE TABLE IF NOT EXISTS `utazon_itemstack` (item_id BIGINT UNIQUE, item_display_name VARCHAR(64), item_material VARCHAR(64), item_enchantments JSON, item_damage INT, stack_size INT, stock BIGINT)");

@@ -1,4 +1,4 @@
-package work.utakatanet.utazonplugin.post;
+package work.utakatanet.utazonplugin.task;
 
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -25,10 +25,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import static work.utakatanet.utazonplugin.post.detectOrder.allowBlocks;
-import static work.utakatanet.utazonplugin.post.detectOrder.getHttpConnection;
+import static work.utakatanet.utazonplugin.task.DetectOrder.allowBlocks;
+import static work.utakatanet.utazonplugin.task.DetectOrder.getHttpConnection;
 
-public class detectReturn extends BukkitRunnable {
+public class DetectReturnStock extends BukkitRunnable {
 
     private static final UtazonPlugin plugin = UtazonPlugin.plugin;
 

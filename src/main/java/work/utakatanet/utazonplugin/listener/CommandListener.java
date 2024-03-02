@@ -15,7 +15,7 @@ import work.utakatanet.utazonplugin.util.WaitingStockHelper;
 
 import java.util.List;
 
-public class onCommand implements CommandExecutor, TabCompleter {
+public class CommandListener implements CommandExecutor, TabCompleter {
 
     private static final UtazonPlugin plugin = UtazonPlugin.plugin;
     private static final SocketServer socketServer = UtazonPlugin.socketServer;
@@ -133,6 +133,6 @@ public class onCommand implements CommandExecutor, TabCompleter {
     }
 
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        return new tabComplete().onTabComplete(sender,command,alias,args);
+        return new TabComplete().onTabComplete(sender,command,alias,args);
     }
 }

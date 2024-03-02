@@ -28,8 +28,6 @@ public class WaitingStockHelper {
         }
 
         return inv;
-        // https://qiita.com/yt0f1/items/a11fe0e2ac068d005309
-        // https://www.spigotmc.org/wiki/creating-a-gui-inventory/
     }
 
     public static ItemStack[] get(@NotNull UUID uuid) {

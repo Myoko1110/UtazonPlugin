@@ -4,10 +4,11 @@ import com.github.kuripasanda.economyutilsapi.EconomyUtilsAPI;
 import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
 import com.google.gson.Gson;
 import org.bukkit.plugin.java.JavaPlugin;
-import work.utakatanet.utazonplugin.listener.EventListener;
-import work.utakatanet.utazonplugin.listener.onCommand;
-import work.utakatanet.utazonplugin.post.detectOrder;
-import work.utakatanet.utazonplugin.post.detectReturn;
+import work.utakatanet.utazonplugin.listener.BlockPlaceListener;
+import work.utakatanet.utazonplugin.listener.InventoryCloseListener;
+import work.utakatanet.utazonplugin.listener.CommandListener;
+import work.utakatanet.utazonplugin.task.DetectOrder;
+import work.utakatanet.utazonplugin.task.DetectReturnStock;
 import work.utakatanet.utazonplugin.util.DatabaseHelper;
 import work.utakatanet.utazonplugin.util.SocketServer;
 
@@ -25,26 +26,32 @@ public final class UtazonPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // Plugin
         plugin = this;
-        ecoApi = EconomyUtilsAPI.Companion.getApi();
-
         getLogger().info("UtazonPlugin が有効になりました");
-        saveDefaultConfig();
 
+        // Settings
+        saveDefaultConfig();
         webHost = getConfig().getString("web.host");
         webPass = getConfig().getString("web.pass");
         webEmbedHost = getConfig().getString("web.embed");
 
+        // Initialize
+        ecoApi = EconomyUtilsAPI.Companion.getApi();
         socketServer = new SocketServer();
         socketServer.start();
-
-        getCommand("utazon").setExecutor(new onCommand());
-        getServer().getPluginManager().registerEvents(new EventListener(), this);
-
         new DatabaseHelper().init();
 
-        new detectOrder().runTaskTimer(this, 0, 20*60);
-        new detectReturn().runTaskTimer(this, 0, 20*60);
+        // Command
+        getCommand("utazon").setExecutor(new CommandListener());
+
+        // Event
+        getServer().getPluginManager().registerEvents(new InventoryCloseListener(), this);
+        getServer().getPluginManager().registerEvents(new BlockPlaceListener(), this);
+
+        // Task
+        new DetectOrder().runTaskTimer(this, 0, 20*60);
+        new DetectReturnStock().runTaskTimer(this, 0, 20*60);
 
     }
 

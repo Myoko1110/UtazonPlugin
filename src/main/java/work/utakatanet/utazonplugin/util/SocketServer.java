@@ -2,18 +2,8 @@ package work.utakatanet.utazonplugin.util;
 
 import com.github.kuripasanda.economyutilsapi.api.EconomyUtilsApi;
 import com.google.gson.Gson;
-import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.ShulkerBox;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockStateMeta;
 import work.utakatanet.utazonplugin.UtazonPlugin;
-import work.utakatanet.utazonplugin.data.ProductItem;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,10 +11,8 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.UUID;
-
-import static work.utakatanet.utazonplugin.post.detectOrder.allowBlocks;
+import java.util.concurrent.Future;
 
 public class SocketServer implements Runnable {
 
@@ -117,11 +105,13 @@ public class SocketServer implements Runnable {
                     }
 
                     UUID finalUUID = uuid;
-                    plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                        ecoApi.withdrawPlayer(finalUUID, Double.parseDouble(receivedJson[2]), receivedJson[3], receivedJson[4]);
-                        return null;
-                    });
-                    outputStream.write("Success".getBytes());
+                    Future<Boolean> future = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> ecoApi.withdrawPlayer(finalUUID, Double.parseDouble(receivedJson[2]), receivedJson[3], receivedJson[4]));
+                    boolean result = future.get();
+                    if (result) {
+                        outputStream.write("1".getBytes());
+                    } else {
+                        outputStream.write("0".getBytes());
+                    }
                     outputStream.flush();
 
                 } else if (receivedJson[0].equalsIgnoreCase("depositPlayer")) {
@@ -135,11 +125,13 @@ public class SocketServer implements Runnable {
                     }
 
                     UUID finalUUID = uuid;
-                    plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                        ecoApi.depositPlayer(finalUUID, Double.parseDouble(receivedJson[2]), receivedJson[3], receivedJson[4]);
-                        return null;
-                    });
-                    outputStream.write("Success".getBytes());
+                    Future<Boolean> future = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> ecoApi.depositPlayer(finalUUID, Double.parseDouble(receivedJson[2]), receivedJson[3], receivedJson[4]));
+                    boolean result = future.get();
+                    if (result) {
+                        outputStream.write("1".getBytes());
+                    } else {
+                        outputStream.write("0".getBytes());
+                    }
                     outputStream.flush();
                 }
             }
